@@ -1,0 +1,328 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, minimum-scale=0,initial-scale=0.5,maximum-scale=1,user-scalable=no" />
+        <script>
+            window.onload = oppstart;
+            var ruter = 40;
+            var ruteLengde;
+            var slangeRuter = [];
+            var randomX;
+            var randomY;
+            var retningIndikatorFunksjon = "retningOpp";
+            var score = 0;
+            var intervall;
+            var intervallTid = 100;
+            var unngåUSving = 1;
+            
+            var currenteple;
+            var slangeFakta = ["Visste du at det finnes over 3000 slangearter?", "Visste du at Carl von Linné innførte det vitenskapelige navnet 'Serpentes' for slanger?", "Visste du at Antarktis er det eneste kontinentet hvor det ikke finnes slanger?", "Visste du at slanger ikke kan blunke?", "Visste du at stoffet som hindrer uttørkning av slangens overhud er et β-keratin?", "Visste du at slangeslekten 'Chrysopelea', kan glidefly opptil 100 m mellom trærne i regnskogene i Sørøst-Asia?", "Visste du at Ormeslanger bare kan bruke øynene til å skille mellom lys og mørke?", "Visste du at noen slangegrupper har sanseorganer som kan registrere temperaturforskjeller mindre enn 0,001 °C?", "Visste du at William har et greit forhold til slanger?", "Visste du at verdens lengste slange var en Nettslange med navnet Medusa, og var 7.67 m lang?", "Visste du at en nylig oppdaget slangefossil var over 15 m lang?", "Visste du at slangen jevnlig bytter ham", "Visste du at tunnelene under Tromsø er 200 ganger bredere enn en gjennomsnittlig slangekropp? (målt 3 cm back ørehullet)."];
+            
+            function oppstart(){
+                if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                ruter = 24;
+       
+            }
+                
+                var canvas = document.getElementById("spillOverflate");
+
+                var ctx = canvas.getContext("2d");
+                
+                window.addEventListener('scroll', noscroll);
+
+                ruteLengde = canvas.width/ruter;
+                slangeRuter.push({x: ruteLengde*ruter/2, y: ruteLengde*ruter/2});
+                slangeRuter.push({x: ruteLengde*ruter/2, y: ruteLengde*ruter/2});
+                document.onkeydown = keyDown;
+                
+                intervall = setInterval(oppdaterSpill, intervallTid);
+                matPunkt();
+
+            }
+
+            function noscroll() {
+                window.scrollTo(0, 0);
+                }
+            function oppdaterSpill(){
+                unngåUSving = 1;
+                var canvas = document.getElementById("spillOverflate");
+                var ctx = canvas.getContext("2d");
+                window[retningIndikatorFunksjon]();
+                slangeRuter.pop();
+                clear();
+                
+                
+                ctx.fillStyle = "black";
+                for (var i = 1; i < slangeRuter.length; i++){
+                    if (slangeRuter[0].x == slangeRuter[i].x && slangeRuter[0].y == slangeRuter[i].y){
+                        gameOver();
+                        
+                    }
+                    
+                }
+                
+               
+                for (var i = 0; i < slangeRuter.length; i++){
+                    
+                    
+                    
+                    if (slangeRuter[i].x > canvas.width- ruteLengde){
+                        slangeRuter[i].x = 0;
+                    }
+                    if (slangeRuter[i].x < 0){
+                        slangeRuter[i].x = canvas.width;
+                    }
+                    if (slangeRuter[i].y > canvas.height-ruteLengde){
+                        slangeRuter[i].y = 0;
+                    }
+                    if (slangeRuter[i].y < 0){
+                        slangeRuter[i].y = canvas.height;
+                    }
+                    
+                    
+                    if (i == 0){
+                        var slangehode = document.getElementById("slangehodeId");
+                
+
+                
+                ctx.save();
+                ctx.translate(Math.floor(slangeRuter[i].x+(ruteLengde)/2), Math.floor(slangeRuter[i].y-(ruteLengde)/2));
+                
+                if (retningIndikatorFunksjon == "retningVenstre"){
+                    ctx.rotate(graderTilRadianer(0));
+                    ctx.drawImage(slangehode, 0-ruteLengde/2, 0+ruteLengde/2, 600/ruter, 600/ruter);
+                }
+                else if (retningIndikatorFunksjon == "retningOpp"){
+                    ctx.rotate(graderTilRadianer(90));
+                    ctx.drawImage(slangehode, 0+ruteLengde/2, 0-ruteLengde/2, 600/ruter, 600/ruter);
+                }
+                else if (retningIndikatorFunksjon == "retningHøyre"){
+                    ctx.rotate(graderTilRadianer(180));
+                    ctx.drawImage(slangehode, 0-ruteLengde/2, 0-ruteLengde*3/2, 600/ruter, 600/ruter);
+                }
+                
+                else if (retningIndikatorFunksjon == "retningNed"){
+                    ctx.rotate(graderTilRadianer(-90));
+                     ctx.drawImage(slangehode, 0-ruteLengde*1.5, 0-ruteLengde/2, 600/ruter, 600/ruter);
+                }
+                
+                
+                ctx.restore();
+                    }
+                        else{
+                    
+                    ctx.beginPath();
+                    if (i == 0){
+                        ctx.fillStyle = "black";
+                    }
+                    else if (i%2 == 0){
+                        ctx.fillStyle = "#7CB342";
+                        
+                        
+                    }
+                    else{
+                        ctx.fillStyle = "#1B5E20";
+                    }
+                    ctx.rect(slangeRuter[i].x, slangeRuter[i].y, ruteLengde, ruteLengde);
+                    
+                    ctx.fill();
+                        }
+                }
+                
+                
+                if (slangeRuter[0].x == randomX && slangeRuter[0].y == randomY){
+                    slangeRuter.push({x: slangeRuter[slangeRuter.length-1].x, y: slangeRuter[slangeRuter.length-1].y});
+                    matPunkt();
+                    score++;
+                    
+                }
+                ctx.beginPath();
+                ctx.drawImage(currenteple, randomX, randomY, ruteLengde, ruteLengde);
+                
+                
+                
+                
+                
+            }
+
+            
+        
+            function retningOpp(){
+                slangeRuter.unshift({x: slangeRuter[0].x, y: slangeRuter[0].y - ruteLengde});
+            }
+            
+            function retningHøyre(){
+                slangeRuter.unshift({x: slangeRuter[0].x + ruteLengde, y: slangeRuter[0].y});
+            }
+            
+            function retningNed(){
+                slangeRuter.unshift({x: slangeRuter[0].x, y: slangeRuter[0].y + ruteLengde});
+            }
+            
+            function retningVenstre(){
+                slangeRuter.unshift({x: slangeRuter[0].x-ruteLengde, y: slangeRuter[0].y});
+            }
+            function keyDown(evt){
+                if (unngåUSving){
+                if (evt.keyCode == 38 || evt == "opp"){
+                    if (retningIndikatorFunksjon != "retningNed"){
+                    retningIndikatorFunksjon = "retningOpp";
+                    
+                    }
+                }
+                if (evt.keyCode == 39 || evt == "høyre"){
+                    if (retningIndikatorFunksjon != "retningVenstre"){
+                    retningIndikatorFunksjon = "retningHøyre";
+                       
+                    }
+                }
+                
+                if (evt.keyCode == 40 || evt == "ned"){
+                    if (retningIndikatorFunksjon != "retningOpp"){
+                    retningIndikatorFunksjon = "retningNed";
+                      
+                    }
+                }
+                if (evt.keyCode == 37 || evt == "venstre"){
+                    if (retningIndikatorFunksjon != "retningHøyre"){
+                    retningIndikatorFunksjon = "retningVenstre";
+                        
+                    }
+                }
+                    unngåUSving = 0;
+                }
+                
+            }
+            
+            
+            
+            function tegnSlange(){
+                var canvas = document.getElementById("spillOverflate");
+                
+                var ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                for (var i = 0; i < slangeRuter.length; i++){
+                    ctx.rect(slangeRuter[i].x, slangeRuter[i].y, ruteLengde, ruteLengde);
+                }
+                ctx.fill();
+            }
+            
+            
+            function matPunkt(){
+                var canvas = document.getElementById("spillOverflate");
+                var ctx = canvas.getContext("2d");
+                var epler = document.getElementsByClassName("epleClass");
+                
+                currenteple = epler[(Math.floor((Math.random()*epler.length)))];
+                
+                randomX = (Math.floor((Math.random()*ruter)))*ruteLengde;
+                randomY = (Math.floor((Math.random()*ruter)))*ruteLengde;
+                for (var i = 0; i < slangeRuter.length; i++){
+                    if (randomX == slangeRuter[i].x && randomY == slangeRuter[i].y){
+                        matPunkt();
+                        return;
+                    }
+                }
+                ctx.beginPath();
+//                ctx.fillStyle = "red";
+//                ctx.fillRect(randomX, randomY, ruteLengde, ruteLengde);
+                ctx.drawImage(currenteple, randomX, randomY, ruteLengde, ruteLengde);
+                
+            }
+            
+            function clear(){
+                var canvas = document.getElementById("spillOverflate");
+                var ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.font = "100px Arial"
+                ctx.fillText("Snake", 163, 327);
+                ctx.fillText("Score: " + score, 10, 590);
+                ctx.stroke();
+
+            }
+            
+            function gameOver(){
+                clearInterval(intervall);
+                alert("Game Over!\nScore: " + score + "\n" + slangeFakta[Math.floor(Math.random()*slangeFakta.length)]);
+                
+                window.location.reload();
+            }
+            
+            function graderTilRadianer(grader){
+            return Math.PI*grader/180;
+        }
+            
+        </script>
+    </head>
+
+<body><div id="spillBilder"><img class="epleClass" src="eple1.png" id="eple1"><img class="epleClass" src="eple2.png" id="eple2"><img class="epleClass" src="eple3.png" id="eple3"><img id="slangehodeId" src="slange.png"></div>
+    <div id="canvasDiv"><canvas id="spillOverflate" height="600px" width="600px"></canvas></div>
+    
+    <div id="mobilknapper"><div class="mobilKnp" id="opp" onmouseover="keyDown('opp');">↑</div><br><div class="mobilKnp" id="venstre" onmouseover="keyDown('venstre');">←</div><div class="mobilKnp" id="ned" onmouseover="keyDown('ned');">↓</div><div class="mobilKnp" id="høyre" onmouseover="keyDown('høyre');">→</div></div>
+    <footer>Programmering:      William || Grafikk:        Julie</footer>
+    
+</body>
+    <style>
+        
+        body{
+            text-align: center;
+        }
+        #spillBilder{
+            display: none;
+            
+        }
+        .epleClass{
+           
+        }
+        
+        #mobilknapper{
+            display: none;
+        }
+        
+        #canvasDiv{
+            align-content: center;
+            
+        }
+        #spillOverflate{
+            border: solid;
+            animation: animerInn 1s ease;
+            border-radius: 2px;
+        }
+        #canvasDiv{
+            display: inline-block;
+        }
+        
+        footer{
+            text-align: left;
+        }
+        
+        
+        @keyframes animerInn{
+            0%{
+                
+                transform: rotateZ(0deg) scale(0); 
+            }
+            100%{
+                transform: rotateZ(360deg) scale(1);
+            }
+        }
+        @media only screen and (max-device-width: 414px){
+            #mobilknapper{
+                display: block;
+                font-size: 100px;
+                text-align: center;
+                
+            }
+            .mobilKnp{
+            width: 120px;
+            height: 120px;
+            margin: 5px;
+            border: solid;
+            display: inline-block;
+        }
+        }
+    
+    </style>
+</html>

@@ -1,0 +1,287 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, minimum-scale=0.6,initial-scale=0.6,maximum-scale=0.6,user-scalable=no initial-scale=1" />
+        <link href="https://fonts.googleapis.com/css?family=Raleway:700" rel="stylesheet">
+        <link href="http://i.imgur.com/01Akcee.jpg" rel="apple-touch-icon" />
+        <title>Regn ut mengde kontanter</title>
+        <script>
+            window.onload = oppstart;
+
+            var i=0;
+            var array1 = [1000, 500, 200, 100, 50, 20, 10, 5, 1];
+
+
+            function cash(penger){
+                var x= penger;
+                var pengetyper = [
+                    {amount: 0, navn: "Tusenlapp"},
+                    {amount: 0, navn: "Femhundrelapp"},
+                    {amount: 0, navn: "Tohundrelapp"}, 
+                    {amount: 0, navn: "Hundrelapp"},
+                    {amount: 0, navn: "Femtilapp"},
+                    {amount: 0, navn: "Tjuekroning"}, 
+                    {amount: 0, navn: "Tikroning"},
+                    {amount: 0, navn: "Femkroning"},
+                    {amount: 0, navn: "Enkroning"}]
+
+                var returnverdi = "Antall kroner: " + penger + "<br><br>";
+
+
+                var rest = x;
+
+                for (var j = 0; j < pengetyper.length; j++){
+
+                    pengetyper[j].amount = ((rest - rest%array1[j])/array1[j]);
+                    rest = rest%array1[j];
+
+                    if(pengetyper[j].amount > 0){
+                        if (pengetyper[j].amount > 1){
+                            returnverdi += (pengetyper[j].navn + "er: " + pengetyper[j].amount + "<br>");
+                        }
+                        else{
+                            returnverdi += (pengetyper[j].navn + ": " + pengetyper[j].amount + "<br>");
+                        }
+                    }
+                }
+
+
+
+                return returnverdi;
+
+
+            }
+
+            function oppstart(){
+                document.getElementById("btn1").onclick = funksjon;
+                document.getElementById("btn2").onclick = funksjon2;
+                document.getElementById('p2').style.display = 'none';
+
+
+
+
+
+            }
+
+            function funksjon(){
+
+                document.getElementById("p1").innerHTML = cash(document.getElementById("pengerfoor").value-document.getElementById("pris").value);
+                document.getElementById("p1").scrollIntoView(true);
+            }
+
+            function funksjon2(){
+
+
+                var y = document.getElementById('p2');
+                if (y.style.display === 'none') {
+                    y.style.display = 'block';
+                } else {
+                    y.style.display = 'none';
+                }
+            }
+
+
+
+
+
+
+
+        </script>
+    </head>
+
+    <body>
+
+
+        <div id="div1">
+            <div id="inputogknapp">
+                <div id="divPenger">Penger før betaling<br><input type="number" id="pengerfoor" value="" class="inputs" pattern="[0-9]*" inputmode="numeric"> </div>
+                <div id="divPris"> Pris<br><input type="number" id="pris" value="" class="inputs" pattern="[0-9]*" inputmode="numeric"><br> </div>
+                <button id="btn1">Regn ut</button><br>
+                <button id="btn2">Hjelp!</button>
+            </div>
+
+            <div id="resultat">
+                <p id="p1"></p>
+                <p id="p2">Du er i ferd med å betale med kontanter i butikken. Siden du er en smart person vil du selvfølgelig få tilbake rett mengde kontanter etter betalingen. William står klar til å hjelpe deg med sin "avanserte" algoritme som regner ut hvilken mengde av hver kontanttype du skal få returnert! <br><br> I første tekstfelt skriver du hvor mye penger du gir til ekspeditøren. I den andre skriver du prisen på varene til sammen.</p>
+            </div>
+
+
+        </div>
+
+        <div id="ekstrating">
+   © William Dalheim
+
+        </div>
+
+    </body>
+    <style>
+        body{
+            font-size: 50px;
+            font-family: 'Raleway', sans-serif;
+            align-content: center;
+            text-align: center;
+            background-color: #9B59B6;
+
+
+        }
+        #div1{
+            background-color: #2ecc71;
+
+            height: auto;
+            width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            border: solid 15px #27ae60;
+            border-radius: 10px;
+        }
+        #divPenger{
+
+
+            padding-bottom: 10px;
+            background-color: 
+        }
+        #btn1{
+            font-size: 50px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            width: 300px;
+
+            position: relative;
+            margin-left: 10px;
+            border: 1px solid #446CB3;
+            border-radius: 5px;
+            background-color: #446CB3;
+            font-weight: 900;
+
+            float: inherit;
+            box-shadow: 0px 7px 0px #2C3E50;
+            top: 4px;
+            transition: all ease 0.3px;
+            cursor: grabbing;  
+
+
+        }
+        
+        
+
+        #btn1:active{
+            box-shadow: 0px 3px 0px #2C3E50;
+            top: 8px;
+        }
+
+        #btn2{
+            font-size: 30px;
+            margin-top: 20px;
+            margin-bottom: 0px;
+            font-family: 'Raleway', sans-serif;
+
+
+            position: relative;
+            margin-left: 10px;
+            border-color: #2C3E50;
+            border-radius: 6px;
+
+            font-weight: 900;
+
+            float: inherit;
+            background-color: #446CB3; 
+            top: 4px;
+            transition: all ease 0.3px;
+            cursor: grabbing;  
+        }
+
+        #resultat{
+
+        }
+        #p2{
+            font-size: 20px;
+            text-align: left;
+            padding: 3px;
+        }
+
+
+        .inputs{
+            font-size: 30px;
+            height: 50px;
+            width: 150px;
+            position: relative;
+
+        }
+
+        #ekstrating{
+            font-size: 18px;
+        }
+
+        .prosjektKnapp{
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        @media only screen and (max-device-width: 414px){
+            #btn1{
+                font-size: 60px;
+                width: 300px;
+                height: 80px;
+                text-align: center;
+                align-content: center;
+            }
+            body{
+                width: auto;
+                font-size: 80px;
+
+                text-align: center;
+
+                font-family: 'Raleway', sans-serif;
+
+                background-color: #9B59B6;
+
+            }
+
+            #divPenger{
+                margin-top: 5px;
+                padding-top: 40px;
+            }
+
+            #divPris{
+
+                padding-top: 40px;
+            }
+
+            .inputs{
+                width: 300px;
+                height: 120px;
+                margin-bottom: 20px;
+                font-size: 80px;
+            }
+            #resultat{
+                font-size: 40px;
+            }
+
+            #div1{
+                
+
+                width: 100%;
+                height: auto;
+                margin-right: 100%;
+                border: solid 15px 100px #27ae60;
+                position: relative;
+                
+                
+                
+
+            }
+            #ekstrating{
+                text-align: left;
+            }
+
+            
+                
+            }
+            
+        }
+
+    </style>
+</html>

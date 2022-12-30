@@ -1,0 +1,235 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+        
+            var grid = [];
+            var scl;
+            var rows, cols;
+            var damping = 0.9;
+            var gravity;
+            function setup(){
+                createCanvas(600, 600);
+                rows = 8;
+                cols = 7;
+                scl = width/rows;
+                gravity = createVector(0, 0.4);
+                applyElements();
+                for (var x = 0; x < rows; x++){
+                    grid[x] = [];
+                    for (var y = 0; y < cols; y++){
+                        grid[x][y] = new Particle(x*scl+scl/2, y*scl+scl/2);
+                    }
+                }
+                
+                for (var x = 0; x < grid.length; x++){
+                    for (var y = 0; y < grid[x].length; y++){
+                        
+                        if (x != 0){
+                            grid[x][y].neighbors.push(grid[x-1][y]);
+                        }
+                        if (y != 0){
+                            grid[x][y].neighbors.push(grid[x][y-1]);
+                        }   
+                        if (x != rows-1){
+                            grid[x][y].neighbors.push(grid[x+1][y]);
+                        }
+                        
+                        if (y != cols-1){
+                            grid[x][y].neighbors.push(grid[x][y+1]);
+                        }
+                     
+                        
+                    }
+                }
+                
+            }
+            
+            function draw(){
+                background(225);
+                scale(1);
+                
+                damping = document.getElementById("dampingSlider").value;
+                
+                
+                
+                for (var x = 0; x < grid.length; x++){
+                    for (var y = 0; y < grid[x].length; y++){
+                        if (grid[x][y].beingDragged){
+                            
+                            grid[x][y].steer(mouseX, mouseY);
+                           
+                        }
+                        
+                        grid[x][y].applyForce(gravity);
+                        grid[x][y].update();
+                        grid[x][y].drawLines();
+                    }
+                }
+                
+                for (var x = 0; x < grid.length; x++){
+                    for (var y = 0; y < grid[x].length; y++){
+                        grid[x][y].show();
+                        
+                    }
+                }
+            }
+            
+            function mousePressed(){
+                var mouse = {
+                    x: mouseX,
+                    y: mouseY
+                }
+                
+                for (var x = 0; x < grid.length; x++){
+                    for (var y = 0; y < grid[x].length; y++){
+                        if (dist(mouse.x, mouse.y, grid[x][y].pos.x, grid[x][y].pos.y) < grid[x][y].radius){
+                            grid[x][y].beingDragged = true;
+                        } 
+                    }
+                }
+            }
+            
+            function mouseReleased(){
+                for (var x = 0; x < grid.length; x++){
+                    for (var y = 0; y < grid[x].length; y++){
+                        grid[x][y].beingDragged = false; 
+                    }
+                }
+            }
+            
+            function Particle(x, y){
+                this.pos = createVector(x, y);
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                this.startPos = this.pos.copy();
+                this.offset = createVector(0, 0);
+                
+                this.neighbors = [];
+                this.beingDragged = false;
+                this.radius = 19 * 8/rows;
+                
+                this.newOffset = function(x, y){
+                    this.offset.set(x - this.startPos.x, y - this.startPos.y);
+                }
+                
+                this.applyForce = function(force){
+                    this.acc.add(force);
+                }
+                
+                this.show = function(){
+                    push();
+                    if (!this.beingDragged){
+                    var color = map(this.vel.mag(), 0, 15, 0, 101/2);
+                    fill(101 - color);
+                    }
+                    else{
+                        
+                        fill(100, 200, 100);
+                    }
+                    
+                    noStroke();
+                    ellipse(this.pos.x, this.pos.y, this.radius*2, this.radius*2);
+                    pop();
+                    
+                }
+                
+                this.drawLines = function(){
+                    push();
+                    
+                    
+                    for (var i = 0; i < 2; i++){
+                        var distance = dist(this.pos.x, this.pos.y, this.neighbors[i].pos.x, this.neighbors[i].pos.y);
+                        var weight = map(distance, 75, 150, 2, 1);
+                        strokeWeight(weight);
+                        stroke(31);
+                        line(this.pos.x, this.pos.y, this.neighbors[i].pos.x, this.neighbors[i].pos.y);
+                    }
+                    pop();
+                }
+                
+                this.update = function(){
+                    
+                    this.vel.add(this.acc);
+                    this.vel.mult(damping);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+                    
+                    this.offset.set(this.pos.x - this.startPos.x, this.pos.y - this.startPos.y);
+                    //this.pos.set(this.startPos.x + this.offset.x, this.startPos.y + this.offset.y);
+                   
+                        var copyOffset = this.offset.copy();
+                        copyOffset.mult(0.0250);
+                        for (var i = 0; i < this.neighbors.length; i++){
+                            if (!this.neighbors[i].beingDragged){
+                            this.neighbors[i].applyForce(copyOffset);
+                            }
+                        }
+                    if (!this.beingDragged){
+                    this.steer(this.startPos.x, this.startPos.y);
+                    }
+                    
+                }
+                
+                this.steer = function(x, y){
+                    
+                    var desired = createVector(x - this.pos.x, y- this.pos.y);
+                    desired.mult(1/10);
+                    
+                    //var steer = p5.Vector.sub(desired, this.vel);
+                    this.applyForce(desired);
+                }
+            }
+            
+            function applyElements(){
+                var br = document.createElement("br");
+                document.body.appendChild(br);
+                var dampingslider = document.createElement("input");
+                dampingslider.type = "range";
+                dampingslider.max = 1;
+                dampingslider.min = 0.01;
+                dampingslider.step = 0.01;
+                dampingslider.value = 0.9;
+                
+                dampingslider.id = "dampingSlider";
+                document.body.appendChild(dampingslider);
+                
+                var spanElem = document.createElement("span");
+                spanElem.id = "dampingoutput";
+                spanElem.innerHTML = dampingslider.value;
+                dampingslider.onchange = function (){
+                    document.getElementById("dampingoutput").innerHTML = damping;
+                }
+                document.body.appendChild(spanElem);
+                
+            }
+            
+            
+            function keyPressed(){
+                if (keyCode === LEFT_ARROW){
+                    for (var y = 0; y < grid[grid.length-1].length; y++){
+                        var force = createVector(-10, 0);
+                        grid[grid.length-1][y].applyForce(force);
+                    
+                    }
+                }
+            }
+        
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

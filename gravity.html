@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script language="javascript" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.8/p5.js"></script>
+        <script src="Satellitt.js"></script>
+        <script>
+            var satellitter = [];
+            var indikasjon;
+            
+            var startXY = {
+                x: 0,
+                y: 0
+            }
+            var sluttXY = {
+                x: 0,
+                y: 0
+            }
+            
+            const k = (9.81*1600)/20;
+            
+            var type;
+            var masse;
+            var radius;
+            var tiltrekningsradius;
+            
+            var bakgrunnsindikasjon = true;
+            function setup(){
+                createCanvas(850, 575);
+                
+                //satellitter[0] = new Satellitt(width/4, height/2, true, 2.5);
+                //satellitter[1] = new Satellitt(width/4*3, height/2, true, 0.5);
+                
+                
+                var selectElem = document.createElement("select");
+                var optionElem1 = document.createElement("option");
+                var optionElem2 = document.createElement("option");
+                var lineBreakElem = document.createElement("br");
+                var masseElem = document.createElement("input");
+                var affectElem = document.createElement("input");
+                var spanElem1 = document.createElement("span");
+                var spanElem2 = document.createElement("span");
+                var spanElem3 = document.createElement("span");
+                var spanElem4 = document.createElement("span");
+                
+                var infoElem = document.createElement("p");
+                
+                
+                document.body.appendChild(lineBreakElem);
+                spanElem1.innerHTML = "Type: ";
+                document.body.appendChild(spanElem1);
+                selectElem.id = "selectSatellittType";
+                optionElem1.value = "meteoride";
+                optionElem2.value = "stasjonær";
+                optionElem1.innerHTML = "Meteoride";
+                optionElem2.innerHTML = "Stasjonær";
+                
+                selectElem.appendChild(optionElem1);
+                selectElem.appendChild(optionElem2);
+                
+                document.body.appendChild(selectElem);
+                
+                
+                masseElem.type = "number";
+                masseElem.id = "masseInput";
+                masseElem.setAttribute("max", "20");
+                masseElem.value = 0.5;
+                
+                masseElem.placeholder = "Masse påvirker tyngdekraft";
+                
+                spanElem2.innerHTML = "Masse: ";
+                document.body.appendChild(spanElem2);
+                document.body.appendChild(masseElem);
+                var radiusElem = document.createElement('input');
+                radiusElem.type = "number";
+                radiusElem.id = "radiusInput";
+                radiusElem.value = 10;
+                spanElem3.innerHTML = "Radius: ";
+                document.body.appendChild(spanElem3);
+                document.body.appendChild(radiusElem);
+                
+                affectElem.type = "number";
+                affectElem.id = "affectInput";
+                affectElem.value = 300;
+                spanElem4.innerHTML = "Tiltrekningsradius";
+                
+                document.body.appendChild(spanElem4);
+                document.body.appendChild(affectElem);
+                
+                infoElem.innerHTML = "<h3>Kontroller</h3><br>Datamus: Dra på skjermen for å sende av gårde meteorider eller plassere planeter<br>S: Skyte meteorider i tilfeldig retning<br>D: Fjerne alle satellitter<br>B: Slå av og på 'bakgrunnsoppfriskning'(?????)<br>Pil opp: Trekke alle meteorider mot datamusen<br>Pil ned: Dytte alle meteorider ifra datamusen<br>";
+                
+                document.body.appendChild(infoElem);
+                
+                
+                
+                
+            }
+            
+            
+            function draw(){
+                masse = Number(document.getElementById("masseInput").value);
+                type = document.getElementById("selectSatellittType").value;
+                radius = Number(document.getElementById("radiusInput").value);
+                tiltrekningsradius = Number(document.getElementById("affectInput").value);
+                if (bakgrunnsindikasjon){
+                background(220);
+                }
+                
+                
+                tegnPil();
+                
+                keyDown();
+                
+                for (var i = 0; i < satellitter.length; i++){
+                    
+                    for (var j = i+1; j < satellitter.length; j++){
+                        
+                            
+                        var distanse = dist(satellitter[j].pos.x, satellitter[j].pos.y, satellitter[i].pos.x, satellitter[i].pos.y);
+                        if (distanse > 15 || distanse < -15){
+                        if (distanse <= satellitter[i].affectRadius){
+                        var forceVector = createVector((satellitter[i].pos.x - satellitter[j].pos.x), (satellitter[i].pos.y - satellitter[j].pos.y));
+                        forceVector.setMag(((satellitter[i].gravity*satellitter[j].gravity)/Math.pow(distanse, 2))*k);
+                        satellitter[j].applyForce(forceVector);
+                        }
+                        
+                        if (distanse <= satellitter[j].affectRadius){
+                        var forceVector2 = createVector(satellitter[j].pos.x - satellitter[i].pos.x, satellitter[j].pos.y - satellitter[i].pos.y);
+                        forceVector2.setMag(((satellitter[j].gravity*satellitter[i].gravity)/Math.pow(distanse, 2))*k);
+                        satellitter[i].applyForce(forceVector2);
+                        }
+                        }
+                        
+                        
+                        if (distanse < (satellitter[i].radius + satellitter[j].radius)){
+                            if (satellitter[i].stationary){
+                                
+                                if (satellitter[i].gravity < satellitter[j].gravity && satellitter[j].stationary == false){
+                                    satellitter[i].split(satellitter[j].vel.x, satellitter[j].vel.y);
+                                    
+                                    
+                                    satellitter.splice(i, 1);
+                                }
+                                else{
+                                
+                                satellitter[i].radius += satellitter[j].radius/2;
+                                satellitter[i].gravity += satellitter[j].gravity;
+                                
+                                satellitter.splice(j, 1);
+                                }
+                            
+                            }
+                            else if (satellitter[j].stationary){
+                                
+                                
+                                
+                                
+                                
+                                satellitter[j].radius += satellitter[i].radius/2;
+                                satellitter[j].gravity += satellitter[i].gravity;
+                                satellitter.splice(i, 1);
+                                
+                            }
+                        
+                            
+                     
+                    }
+                        
+                    
+                }
+                    
+                    satellitter[i].trail();
+                    
+                    satellitter[i].bounce();
+                    satellitter[i].update();
+                    satellitter[i].show();
+            }
+                
+            }
+            
+            
+            
+            function touchStarted(){
+                if (mouseX <= width){
+                startXY.x = mouseX;
+                startXY.y = mouseY;
+                indikasjon = true;
+                }
+                
+            } 
+            function touchEnded(){
+                var satellittType = false;
+                if (mouseX <= width && mouseY <=height){
+                sluttXY.x = mouseX;
+                sluttXY.y = mouseY;
+                
+                var distanseXY = dist(startXY.x, startXY.y, sluttXY.x, sluttXY.y);
+                var velx = startXY.x-sluttXY.x;
+                var vely = startXY.y-sluttXY.y;
+                    if (type == "stasjonær"){
+                        satellittType = true;
+                    }
+                satellitter.push(new Satellitt(mouseX, mouseY, radius, satellittType, masse, tiltrekningsradius, (velx/15), (vely/15)));
+                indikasjon = false;
+                }
+                
+                satellitter.sort(function(a, b){
+                    return b.stationary - a.stationary;
+                })
+            }
+            
+            
+            
+            
+            
+            function keyTyped(){
+                
+                if (key === "s"){
+                    for (var i = 0; i < satellitter.length; i++){
+                        satellitter[i].vel.y = random(-20, 20);
+                        satellitter[i].vel.x = random(-20, 20);
+                    }
+                    
+                }
+                else if (key === "d"){
+                    satellitter = [];
+                }
+                
+                else if (key === "g"){
+                    for (var i = 0; i < satellitter.length; i++){
+                        var gravitasjon = (k*satellitter[i].gravity)/(Math.pow(satellitter[i].radius, 2));
+                        console.log(gravitasjon);
+                        
+                    }
+                }
+                else if (key === "b"){
+                    bakgrunnsindikasjon = !bakgrunnsindikasjon;
+                }
+                
+                
+                
+                
+            }
+            
+            function tegnPil(){
+                if (indikasjon){
+                stroke('red');
+                    strokeWeight(10);
+                sluttXY.x = mouseX;
+                sluttXY.y = mouseY;
+                line(startXY.x, startXY.y, sluttXY.x, sluttXY.y);
+                }
+                
+                noStroke();
+            }
+            
+            function keyDown(){
+                for (var i = 0; i < satellitter.length; i++){
+                var distanse = dist(mouseX, mouseY, satellitter[i].pos.x, satellitter[i].pos.y);
+                var vektor = createVector(mouseX - satellitter[i].pos.x, mouseY - satellitter[i].pos.y);
+                vektor.setMag(0.8);
+                
+                if (keyIsDown(UP_ARROW)){
+                    
+                        
+                        
+                        satellitter[i].applyForce(vektor);
+                        
+                    
+                }
+                
+                if (keyIsDown(DOWN_ARROW)){
+                    
+                        
+                        vektor.mult(-1);
+                        satellitter[i].applyForce(vektor);
+                        
+                    }
+                }
+                
+               
+            }
+        
+        </script>
+    </head>
+
+<body>
+   
+</body>
+
+<style>
+    
+</style>
+    
+</html>

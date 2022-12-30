@@ -1,0 +1,832 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Graftegner</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        
+        <meta name="viewport" content="width=device-width, minimum-scale=1,initial-scale=1,maximum-scale=1,user-scalable=no initial-scale=0.9" />
+        
+        
+        
+        
+        
+        
+        <script>
+            window.onload = oppstart;
+            
+            var pixelratio = 37.7952;//22;
+            var rutenettIndikasjon = false;
+            var hei;
+            var arrayNullpunkt = [];
+      
+            var startIndikasjon = false;
+            
+            function rutenettPå(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                
+               
+                
+                
+                ctx.beginPath();
+                ctx.lineWidth = 0.25;
+                
+                for (var i = -200; i<=200; i+=1/document.getElementById("zoomRange").value){
+                    ctx.moveTo(canvas.width,i*pixelratio);
+                    ctx.lineTo(-canvas.width, i*pixelratio);
+                    
+                }
+                    for (var j = -200; j<=200; j+=1/document.getElementById("zoomRange").value){
+                    ctx.moveTo(j*pixelratio,canvas.height);
+                    ctx.lineTo(j*pixelratio,-canvas.height);
+                    
+                    
+                }
+                ctx.stroke();
+                ctx.closePath();
+                
+                rutenettIndikasjon = true;
+                
+                
+            }
+            
+            function rutenettAv(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                
+                
+                
+                
+                trdgradfunk(document.getElementById("3averdi").value, document.getElementById("3bverdi").value, document.getElementById("3cverdi").value, document.getElementById("3dverdi").value);
+                
+                rutenettIndikasjon = false;
+                
+                
+                
+                
+                    
+                
+                
+            }
+            
+            
+            
+            
+            function grafstreker(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                ctx.beginPath();
+                ctx.lineWidth = 0.7;
+                for (var i = -100; i <= 100; i+=1/document.getElementById("zoomRange").value){
+                    ctx.moveTo(5,i*pixelratio);
+                    ctx.lineTo(-5, i*pixelratio);
+                    
+                    ctx.moveTo(i*pixelratio,5);
+                    ctx.lineTo(i*pixelratio,-5);
+                   
+                }
+                
+                ctx.stroke();
+                ctx.closePath();
+            }
+            
+            
+            function tallpåGraf(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                if (startIndikasjon == true){
+                ctx.scale(0.5,-0.5);
+                }
+                ctx.beginPath();
+                ctx.font = "bold 15px Arial";
+              
+                for (var i = 100; i >= -100; i-=1*2/(document.getElementById("zoomRange").value)){
+                    
+                    if (((-i)/2).toFixed(1) != 0){
+                    ctx.fillText((-i/2).toFixed(1), -39, i*pixelratio+5);
+                    ctx.fillText((i/2).toFixed(1), i*pixelratio-11, 30);
+                        
+                    }
+                    }
+                    
+                    
+                   //ctx.rotate(180*Math.PI/100);
+               
+                ctx.stroke();
+                if (startIndikasjon == true){
+                ctx.scale(2,-2);
+                }
+                startIndikasjon = true;
+                }
+                
+                
+                
+            
+            
+            
+            
+
+            function xogy(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                
+                
+                ctx.beginPath();
+                ctx.lineWidth = 0.5;
+                ctx.moveTo(0,canvas.width*2);
+                ctx.lineTo(0,-canvas.width*2);
+                ctx.moveTo(-canvas.height*2, 0);
+                ctx.lineTo(canvas.height*2,0);
+                ctx.stroke();
+                ctx.closePath();
+                
+                
+            }
+            function trdgradfunk(a, b, c, d){
+                
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                var xverdi;
+                var yverdi;
+                
+                
+                
+                
+                
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                xogy();
+                grafstreker();
+                tallpåGraf();
+                if(a != 0 || b != 0 || c != 0 || d !=0){
+                ctx.beginPath();
+                
+                for (var i = -canvas.width; i<canvas.width; i++){
+                    
+                    var uttrykk = (a*(Math.pow(i,3)))/(pixelratio*pixelratio)+((b*(Math.pow(i,2))))/pixelratio+(c*i)+(d*pixelratio);
+                    var punkt = i;
+                    
+                    
+                    
+                    ctx.fillRect(punkt,uttrykk,0,0);
+                    if(i>-canvas.width+1){
+                        ctx.moveTo(xverdi,yverdi); 
+                        ctx.lineTo(punkt,uttrykk);
+                    }
+
+                    xverdi = punkt;
+                    yverdi = uttrykk;
+                    
+                    
+                    
+                }
+
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.closePath();
+                }
+                
+                return ((a*(Math.pow(i,3)))+(b*(Math.pow(i,2)))+(c*i)+d);
+            }
+                                            
+                                            
+           
+
+
+            function oppstart(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                var divomrade = document.getElementById("graftegneromrade");
+                
+                
+                
+                ctx.translate(canvas.width/2, canvas.height/2);
+                
+                document.getElementById('tittelInfo').style.display = 'none';
+                 
+                tallpåGraf();
+                ctx.scale(2, -2); 
+                
+                grafstreker();
+                
+                
+                xogy();
+                
+                
+                $("tittelInfo").hide();
+                
+                $("#tittel").hover(function(){
+                    
+                    $("#tittelInfo").stop().toggle(250);
+                    var spanWidth = $('#tekstHjemmeside1 #tekstHjemmeside2').width();
+                    $('#tekstHjemmeside1').animate( { width: spanWidth }, 1000 );
+                     
+                }
+                             )
+                
+                
+                
+                document.getElementById("btnOk3").onclick = buttonclick3;
+                //document.getElementById('btnHjelp').onclick = funksjon2;
+                $("#versjonHistorikk").hide();
+                $("#btnHjelp").click(function(){
+                    
+                    $("#versjonHistorikk").slideToggle();
+                    $("#p2").slideToggle("slow");
+                    
+                })
+                
+                document.getElementById('p2').style.display = 'none';
+            
+                document.getElementById('zoomRange').onchange = (function(){
+                    pixelratio = 37.7952*document.getElementById('zoomRange').value
+                    trdgradfunk(document.getElementById("3averdi").value, document.getElementById("3bverdi").value, document.getElementById("3cverdi").value, document.getElementById("3dverdi").value);
+                    
+                    if (rutenettIndikasjon == true){
+                    rutenettPå();
+                        
+                }
+                else{
+                    rutenettAv();
+                }
+                    
+                    endrestorrelse();
+                    
+                    //tallpåGraf();
+                    
+                });
+                
+                
+                
+                document.getElementById("endreStorrelseKnapp").onclick = endrestorrelse;
+                
+               
+                document.getElementById("rutenettKnapp").onclick = (function (){
+                    if (rutenettIndikasjon == false){
+                        rutenettPå();
+                        rutenettIndikasjon = true;
+                        document.getElementById('rutenettKnapp').className = "selected";
+                    }
+                    else {
+                        rutenettAv();
+                        rutenettIndikasjon = false;
+                        document.getElementById('rutenettKnapp').className = "ikkeselected";
+                    }
+                })
+                
+                
+                
+                
+                console.log("Plis ikke stjel koden min :-)    http://i.imgur.com/m1ozihC.png");
+              // document.getElementById('btnHjelp').onclick = (function (){document.getElementById("tekst").scrollIntoView(true)};
+                
+                
+                document.getElementById('3averdi').onchange = endring;
+                document.getElementById('3bverdi').onchange = endring;
+                document.getElementById('3cverdi').onchange = endring;
+                document.getElementById('3dverdi').onchange = endring;
+                
+
+                
+
+            }
+                                  
+            
+            function endrestorrelse(){
+                var canvas = document.getElementById("graftegner");
+                var ctx = document.getElementById("graftegner").getContext("2d");
+                var aV = document.getElementById("3averdi").value;
+                var bV = document.getElementById("3bverdi").value;
+                var cV = document.getElementById("3cverdi").value;
+                var dV = document.getElementById("3dverdi").value;
+                
+                
+                
+                if (document.getElementById('zoomRange').value<1){
+                    
+                
+                canvas.height = Math.ceil(document.getElementById("hoydeInput").value*37.795);
+                canvas.width = Math.ceil(document.getElementById("breddeInput").value*37.795);
+                }
+                
+                else {
+                    canvas.height = Math.ceil(document.getElementById("hoydeInput").value*37.795)*document.getElementById("zoomRange").value;
+                    canvas.width = Math.ceil(document.getElementById("breddeInput").value*37.795)*document.getElementById('zoomRange').value;
+                }
+                
+                
+               
+                
+                
+                console.log(Math.ceil(document.getElementById("hoydeInput").value*37.795));
+                console.log(Math.ceil(document.getElementById("breddeInput").value*37.795));
+                if (canvas.height < 606){
+                    document.getElementById("graftegneromrade").style.height = Math.ceil(document.getElementById("hoydeInput").value*37.795);
+                }
+                else{
+                    document.getElementById("graftegneromrade").style.height = 605;
+                }
+                
+                if (canvas.width < 795){
+                    document.getElementById("graftegneromrade").style.width = Math.ceil(document.getElementById("breddeInput").value*37.795);
+                }
+                else{
+                    document.getElementById("graftegneromrade").style.width = 794;
+                }
+                
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                
+                    ctx.translate(canvas.width/2, canvas.height/2);
+               ctx.scale(2,-2);
+                
+                
+                
+                if (rutenettIndikasjon == true){
+                    rutenettPå();
+                }
+                
+                
+                
+                trdgradfunk(document.getElementById("3averdi").value, document.getElementById("3bverdi").value, document.getElementById("3cverdi").value, document.getElementById("3dverdi").value);
+                
+                
+                if (rutenettIndikasjon == true){
+                    rutenettPå();
+                }
+                else{
+                    rutenettAv();
+                }
+                
+                
+                window.scrollTo(0,50);
+                var xDeltpaato = (document.getElementById('graftegner').width/2);
+                var yDeltpaato = (document.getElementById('graftegner').height/2);
+                
+                document.getElementById("graftegneromrade").scrollLeft = xDeltpaato-(0.1*xDeltpaato);
+                document.getElementById('graftegneromrade').scrollTop = yDeltpaato-(0.1*yDeltpaato);
+                
+                
+                
+                
+                
+            }
+
+            
+            
+            function buttonclick3(){
+                
+                
+                trdgradfunk(document.getElementById("3averdi").value, document.getElementById("3bverdi").value, document.getElementById("3cverdi").value, document.getElementById("3dverdi").value);
+                
+                if (rutenettIndikasjon == true){
+                    rutenettPå();
+                }
+                else{
+                    rutenettAv();
+                }
+                
+                endring();
+            }
+
+            function endring(){
+                var aV = document.getElementById("3averdi").value;
+            var bV = document.getElementById("3bverdi").value;
+            var cV = document.getElementById("3cverdi").value;
+                var dV = document.getElementById("3dverdi").value;
+                
+                var x= document.getElementById("regnutverdi").value;
+                document.getElementById("regnoutput").innerHTML = ((aV*(Math.pow(x,3)))+(bV*(Math.pow(x,2)))+(cV*x)+dV*1);
+            }
+
+//            function funksjon2(){
+//                var y = document.getElementById("p2");
+//                if (y.style.display === 'none') {
+//                    y.style.display = 'block';
+//                } else {
+//                    y.style.display = 'none';
+//                }
+//            }
+
+            
+
+        </script>
+    </head>
+
+    <body>
+        
+        <div id="alt">
+            <h1 id="tittel">Graftegner  <span id="copyright">© William Dalheim</span><br>
+                <span id="tittelInfo"><button id="hjemmeSide" onclick="location.href='index.html';"><div id="tekstHjemmeside1"><span id="tekstHjemmeside2">Gå til hjemmesiden</span></div></button></span></h1>
+        <div id="graftegneromrade">
+            <canvas id="graftegner" width="1200" height="900"></canvas>
+        </div>
+        
+            <div id="utregning">
+                <p id="spalte">
+                    
+                    f(<input type="number" id="regnutverdi" class="input" onchange="endring()" value="0">)= 
+                    <output id="regnoutput"></output><br>
+                    
+                    Uttrykk: <br>f(x)=
+                    <input type="number" id="3averdi" class="input" step="0.1">x<sup class="opphoyd">3</sup>
+                    <input type="number" id="3bverdi" class="input" step="0.1">x<sup class="opphoyd">2</sup>
+                    <input type="number" id="3cverdi" class="input" step="0.1">x
+                    <input type="number" id="3dverdi" class="input" step="0.1"> <br>
+                
+                
+                    
+                    
+                    
+                    
+                    <button id="btnOk3" class="knapp">Tegn Graf</button>
+                    <button id="rutenettKnapp" class="ikkeselected">Rutenett</button>
+                    </p>
+                    
+                    <div id="storrelse">
+                    Høyde: <input type="number" class=".input" id="hoydeInput" value="24.8" max="300">
+                    Bredde: <input type="number" class=".input" id="breddeInput" value="32.5" max="400">
+                        <br>
+                        <button id="endreStorrelseKnapp" class="uttaforutregningknapp">Endre størrelse</button><br>
+                        <br>
+                        <input type="range" id="zoomRange" min="0.1" max="10" step="0.1" value="1" oninput="zoomRangeOutput.value = zoomRange.value" width="400">
+                        <output id="zoomRangeOutput">1</output>
+                        
+                
+                    
+
+                
+
+            </div>
+            
+        </div>
+    <footer><button id="knappTilbake" onclick="location.href='index.html';" class="uttaforutregningknapp">Gå til hjemmesiden</button><button id="btnHjelp" class="uttaforutregningknapp">Hjelp!</button><div id="versjonHistorikk">
+                <br>
+        <p id="p2">Denne graftegneren støtter tredjegrads-, andregrads- og lineærfunksjoner.<br>Eksempel: <br>2x<sup class="opphoyd">2</sup>+4x+5 <br>I felt nr.2 skriver du 2, i felt nr.3 skriver du 4, og i felt nr.4 skriver du 5. Trykk deretter på "Tegn Graf" for å tegne grafen. <br><br> <br>Siden er under konstruksjon. Send gjerne mail til willdalh@gmail.com om du finner feil.<br><br>19.12.2016<br>
+Graftegner versjon 0.3:<br>
+Frisket opp designet på noen elementer, for det meste knapper.<br>
+Grafikkfeltet har nå aksepunkt med tallverdier uten enhet.<br>
+Etter zooming og endring av størrelse skal nå visningsfeltet være omtrentlig pekt mot origo.<br>
+Versjonhistorikk er nå tilgjengelig i dette feltet. <br>
+Det er nå åpnet mulighet for å endre størrelse på selve området som dekker grafikkfeltet. Sjekk i nedre høyre hjørne.<br>
+
+<br> <br>
+18.12.2016<br>
+Graftegner versjon 0.2:<br>
+Grafen treffer nå de punktene den egentlig skal treffe. <br>
+Lagt til en input for zooming.<br>
+Knappenes design er fikset. <br>
+Rutenettknappen fungerer nå som en Av/På-knapp. <br>
+<br><br>
+15.12.2016<br>
+Graftegner versjon 0.1: <br>
+Lagt til rutenett med knapp.<br>
+Lagt til aksepunkt som indikerer hver enhet (1x = 1enhet). Mellomrom mellom hver enhet varierer fra apparat til apparat.<br>
+Fikset på relasjonene mellom centimeter og pixel. <br>
+Størrelseendringboksene bruker nå centimeter istedenfor pixler. <br>
+
+        </p>
+        </div>
+        </div>
+           <div id="overlay">
+    <img id="portrait" src="portrait.png">
+    </div>
+        </footer>
+        
+        
+    </body>
+    
+    <style>
+        #overlay{
+            position: relative;
+            display: none;
+        
+        }
+        #portrait{
+            width: 100%;
+            height: 100%;
+        }
+    
+        body{
+            font-family: \'Raleway\', sans-serif;
+        }
+        #tittel{
+            width: auto;
+            background-color: #019875;
+            border-radius: 5px;
+            padding-left: 10px;
+            box-shadow: 0px 5px 0px #005f49;
+        }
+        
+        #hjemmeSide{
+            font-size: 25px;
+            margin-top: 10px;
+            margin-bottom: 25px;
+            font-family: 'Raleway', sans-serif;
+            
+            height: 40px;
+            align-content: center;
+            
+
+            position: relative;
+            
+            
+            border-radius: 5px;
+            font-weight: 900;
+
+            top: 4px;
+            
+            transition: all ease 0.1s;
+            background-color: #e74c3c;
+            border: 1px solid #e74c3c;
+            box-shadow: 0px 7px 0px #c0392b;
+        }
+        #hjemmeSide:active{
+            box-shadow: 0px 3px 0px #c0392b;
+            top: 8px;
+        }
+        
+        #tekstHjemmeside1 
+        { width: 0%; height: 2em; white-space: nowrap; overflow: hidden;  }
+        
+        #copyright{
+            float: right;
+            padding-right: 10px;
+        }
+        
+        #graftegneromrade{
+            border: solid 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            float: left;
+            height: 600;
+            width: 800;
+            align-content: center;
+            
+            overflow: scroll;
+            resize: both;
+        }
+        
+        
+            
+        
+        
+        #alt{
+            width: 100%;
+            display: block;
+        }
+        
+        #spalte{
+            
+            
+            border: solid;
+
+            border-radius: 10px;
+            padding-right: 10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 10px;
+            font-size: 35px;
+            margin-top: -1px;
+            
+
+        }
+        
+        #storrelse{
+            font-size: 20px;
+        }
+        .input{
+            width: 70px;
+            height: 30px;
+            font-size: 20px;
+            margin-top: -10px;
+        }
+        
+        #opphoyd{
+            position: relative;
+            bottom: 1ex; 
+            font-size: 80%;
+        }
+
+
+
+        
+        #btnOk3{
+            box-shadow: 0px 7px 0px #2C3E50;
+           
+            border: 1px solid #446CB3;
+            background-color: #446CB3;
+            font-size: 25px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            width: 48.99%;
+            height: 40px;
+            align-content: center;
+            
+
+            position: relative;
+            
+            border-radius: 5px;
+            
+            font-weight: 900;
+
+            
+            
+            top: 4px;
+            
+            transition: all ease 0.1s;
+            cursor: grabbing; 
+        }
+        #btnOk3:active{
+            
+            box-shadow: 0px 3px 0px;
+            top: 8px;
+        }
+        
+        
+        
+
+/*
+        #rutenettKnapp{
+
+            font-size: 25px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            width: 48.99%;
+            height: 40px;
+            align-content: center;
+
+
+            position: relative;
+
+
+            border-radius: 5px;
+            font-weight: 900;
+
+            top: 4px;
+
+            transition: all ease 0.3px;
+            background-color: #e74c3c;
+            border: 1px solid #e74c3c;
+            box-shadow: 0px 7px 0px #c0392b;
+
+
+
+
+
+        }
+        #rutenettKnapp:active{
+
+            box-shadow: 0px 3px 0px #27ae60;
+            background-color: #2ecc71;
+            border: #2ecc71;
+            top: 8px;
+        }
+*/
+
+        
+        .ikkeselected{
+            font-size: 25px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            width: 48.99%;
+            height: 40px;
+            align-content: center;
+            
+
+            position: relative;
+            background-color: #e74c3c;
+            border: 1px solid #e74c3c;
+            box-shadow: 0px 7px 0px #c0392b;
+            
+            border-radius: 5px;
+            font-weight: 900;
+
+            top: 4px;
+            
+            transition: all ease 0.1s;
+            
+            
+            
+            
+            
+        }
+        .ikkeselected:active{
+            box-shadow: 0px 3px 0px #27ae60;
+            background-color: #2ecc71;
+            border: #2ecc71;
+            top: 8px;
+        }
+        
+        .selected{
+            font-size: 25px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            width: 48.99%;
+            height: 40px;
+            align-content: center;
+            
+
+            position: relative;
+            
+            
+            border-radius: 5px;
+            font-weight: 900;
+            box-shadow: 0px 3px 0px #27ae60;
+            background-color: #2ecc71;
+            border: #2ecc71;
+            top: 8px;
+            
+        }
+        
+        .uttaforutregningknapp{
+            font-size: 15px;
+            margin-left: 5px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-family: 'Raleway', sans-serif;
+            box-shadow: 0px 5px 0px #1a242e; 
+            top: 3px;
+            transition: all ease 0.1s;
+            position: relative;
+            
+            
+        }
+        
+        .uttaforutregningknapp:active{
+            top: 6px;
+            box-shadow: 0px 2px 0px #1a242e;
+        }
+        
+        button, input:focus{
+            outline: none;
+        }
+        
+        
+        
+        
+       
+        #utregning{
+           position: relative;
+            float: right;
+            height: auto;
+        }
+        #versjonHistorikk{
+            margin-top: 10px;
+            height: 350px;
+            width: 500px;
+            float: right;
+            overflow: scroll;
+            
+        }
+        
+        #btnHjelp{
+            margin-left: 10px;
+        }
+        
+        #p2{
+            width: 97%;
+            background-color: #D2D7D3;
+            border-radius: 4px;
+            border: 6px solid #BDC3C7;
+            height: auto;
+        }
+        
+        
+        @media only screen and (max-device-width: 414px){
+            @media all and (orientation:portrait){
+                #alt{
+                    display: none;
+                }
+                #overlay{
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    margin-bottom: 70px;
+                }
+                
+            }
+        
+           
+           @media all and (orientation:landscape){
+            #graftegneromrade{
+                width: 80%;
+                height: 100%;
+                
+            }
+            
+            #utregning{
+                width: 100%;
+            }
+            .knapp{
+                width: 100%;
+            }
+                }
+        } 
+
+    </style>
+
+</html>

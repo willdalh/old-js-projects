@@ -1,0 +1,147 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.14/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.14/addons/p5.sound.js"></script>
+        
+        
+        <script>
+            let springs = [];
+            let points = [];
+            let gravity;
+            
+            function setup(){
+                createCanvas(600, 600);
+                gravity = createVector(0, 1);
+                points[0] = new Point(width/2, 30, 1, true);
+                for (let i = 1; i < 19; i++){
+                    points[i] = new Point(width/2 + i*40, 30 + i*5, 1);
+                }
+                //points[19] = new Point(width/2 + 19*40, 30 + 19*5, 1, true);
+                for (let i = 0; i < points.length-1; i++){
+                    springs[i] = new Spring(points[i], points[i+1], 10);
+                }
+                
+                points[1].mass = 1;
+            }
+            
+            function draw(){
+                background(51);
+                points[0].pos.set(mouseX, mouseY);
+                for (let i = 0; i < points.length; i++){
+                    points[i].edges();
+                    points[i].applyForce(gravity);
+                    points[i].update();
+                    points[i].show();
+                }
+                
+                for (let i = 0; i < springs.length; i++){
+                    springs[i].update();
+                    springs[i].show();
+                }
+            }
+            
+            class Point{
+                constructor(x, y, mass, fixed){
+                    this.fixed = fixed || false;
+                    this.pos = createVector(x, y);
+                    this.vel = createVector(0, 0);
+                    this.acc = createVector(0, 0);
+                    this.mass = mass;
+                    this.radius = 5;
+                }
+                
+                show() {
+                    noFill();
+                    stroke(255);
+                    strokeWeight(1);
+                    ellipse(this.pos.x, this.pos.y, this.radius*2);
+                }
+                
+                update(){
+                    if (!this.fixed){
+                    this.vel.add(this.acc);
+                    this.vel.mult(0.85);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+                    }
+                }
+                
+                applyForce(force){
+                    force.div(this.mass);
+                    this.acc.add(force);
+                }
+                
+                edges(){
+                    if ((this.pos.x > (width - this.radius))){
+                        
+                        
+                        this.vel.x *= -0.5;
+                        this.pos.x = (width-this.radius);
+                        
+                        
+                    }
+                    
+                    if ((this.pos.x < this.radius)){
+                        
+                        
+                        this.vel.x *= -0.5;
+                        this.pos.x = this.radius;
+                    }
+                    
+                    if (this.pos.y > (height - this.radius)){
+                        this.vel.y *= -0.5;
+                        this.pos.y = height-this.radius;
+                    }
+                
+                }
+            }
+            
+            class Spring{
+                constructor(p1, p2, len){
+                    this.p1 = p1;
+                    this.p2 = p2;
+                    this.len = len;  
+                    this.offset = createVector(0, 0);
+                    this.startVector = createVector(p2.pos.x - p1.pos.x, p2.pos.y - p1.pos.y);
+                    this.startLength = len;
+                    this.springConstant = 1.1;
+                }
+                
+                
+                update(){
+                    
+                    this.offset.set(this.p2.pos.x - this.p1.pos.x, this.p2.pos.y - this.p1.pos.y);
+                    let angle = this.offset.heading();
+                    this.startVector = p5.Vector.fromAngle(angle);
+                    this.startVector.mult(this.len);
+                    let force = this.offset.copy();
+                    force.sub(this.startVector);
+                    force.mult(this.springConstant*0.5);
+                    this.p1.applyForce(force);
+                    force.mult(-1);
+                    this.p2.applyForce(force);
+                }
+                
+                show(){
+                    stroke(255);
+                    strokeWeight(2);
+                    line(this.p1.pos.x, this.p1.pos.y, this.p2.pos.x, this.p2.pos.y);
+                }
+            }
+            
+            
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

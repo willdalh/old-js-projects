@@ -1,0 +1,242 @@
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+        <script src="montecarlo.js"></script>
+        <script>
+            
+            let game;
+            function setup(){
+                createCanvas(700*0.8, 600*0.8);
+                game = new Game(7, 6);
+            }
+            
+            function draw(){
+                background(52, 152, 219);
+                game.update();
+                game.draw();
+            }
+            
+            class Game{
+                constructor(cols, rows){
+                    this.rows = rows;
+                    this.cols = cols; 
+                    this.playerTurn = 1;
+                    this.gameIsRunning = true;
+                    this.board = new Board(cols, rows);
+                    this.tree = new Tree(-1, this.board);
+                }
+                
+                draw(){
+                    noStroke();
+                    fill(3, 125, 208);
+                    rect(this.getColumnClicked()*width/(this.cols), 0, width/this.cols, height);
+                    this.board.draw();
+                }
+                
+                update(){
+                    if (this.gameIsRunning){
+                        if (this.playerTurn == 1){
+                            //Wait for click
+                        }
+                        else if (this.playerTurn == -1){
+                            setTimeout(function(){
+                                game.botDrop();
+                            }, 10);
+                        }
+                    }
+                }
+                
+                playerDrop(){
+                    if (this.playerTurn == 1){
+                        let column = this.getColumnClicked();
+                        if (this.board.checkIfColumnIsFull(column) == false){
+                            this.board.dropTile(this.playerTurn, column);
+                            this.changeTurn();
+                            this.tree.nextRootNode(column);
+                        }
+                    }
+                }
+                
+                botDrop(){
+                    if (this.playerTurn == -1){
+                        this.tree.simulate();
+                        let column = this.tree.bestChoice();
+                        console.log(column);
+                        if (this.board.checkIfColumnIsFull(column) == false){
+                            this.board.dropTile(this.playerTurn, column);
+                            this.changeTurn();
+                            this.tree.nextRootNode(column);
+                        }
+                    }
+                }
+                
+                getColumnClicked(){
+                    return Math.floor(map(mouseX, 0, width, 0, this.cols));
+                }
+                
+                getRandomColumn(){
+                    return Math.floor(Math.random()*this.cols);
+                }
+                
+                announceWinner(){
+                    let winner = this.board.checkForWin();
+                    if (winner == 1){
+                        this.gameIsRunning = false;
+                        setTimeout(function(){
+                            alert("Du vant!")
+                            location.reload();
+                        }, 1000);
+
+                    }
+                    else if (winner == -1){
+                        this.gameIsRunning = false;
+                        setTimeout(function(){
+                            alert("Roboten vant!")
+                            location.reload();
+                        }, 1000);
+                    }
+                }
+
+                changeTurn(){
+                    this.playerTurn = this.playerTurn * -1;
+                    this.announceWinner();
+                }
+            }
+
+            class Board{
+                constructor(cols, rows){
+                    this.cols = cols;
+                    this.rows = rows;
+                    this.board = [];
+                    for (let i = 0; i < cols; i++){
+                        this.board[i] = [];
+                        for (let j = 0; j < rows; j++){
+                            this.board[i][j] = 0;
+                        }
+                    }
+                }
+
+                draw(){
+                    for (let i = 0; i < this.board.length; i++){
+                        for (let j = 0; j < this.board[i].length; j++){
+                            noStroke();
+                            if (this.board[i][j] == 0){
+                                fill(190);
+                            }
+                            else if (this.board[i][j] == 1){
+                                fill(231, 76, 60);
+                            }
+                            else if(this.board[i][j] == -1){
+                                fill(241, 196, 15);
+                            }    
+                            ellipse(i*width/this.cols+width/this.cols*0.5, j*height/this.rows+height/this.rows*0.5, width/(2.3*this.cols)*2); 
+                        }
+                    }   
+                }
+
+                dropTile(player, column){
+                    for (let i = 0; i < this.board[column].length; i++){
+                        if (this.board[column][i+1] == undefined || this.board[column][i+1] != 0){
+                            this.board[column][i] = player;
+                            break;
+                        }
+                    }
+                }
+                
+                AllColumnsFull(){
+                    let full = true;
+                    for (let i = 0; i < this.board.length; i++){
+                        if (this.board[i][0] == 0){
+                            full = false;
+                        }
+                    }
+                    return full;
+                }
+
+                checkIfColumnIsFull(column){
+                    if (this.board[column][0] != 0){
+                        return true;
+                    }
+                    else{
+                        return false;
+                    }
+                }
+
+                checkForWin(){
+                    let winner = 0;
+                    for (let i = 0; i < this.board.length; i++){
+                        for (let j = 0; j < this.board[i].length; j++){
+                            if (this.board[i][j] != 0){
+                                for (let dirX = -1; dirX <= 1; dirX++){
+                                    for(let dirY = -1; dirY <= 1; dirY++){
+                                        if (dirX == 0 && dirY == 0){
+                                            break;
+                                        }
+                                        let count = 1;
+                                        for (let offset = 1; offset <= 3; offset++){
+
+                                            if (this.board[i + dirX*offset] != undefined && this.board[i + dirX*offset][j + dirY*offset] != undefined){
+                                                if (this.board[i + dirX*offset][j + dirY*offset] == this.board[i][j]){
+                                                    count++;
+                                                }
+                                                else{
+                                                    break;
+                                                }
+                                            }
+                                            else{
+                                                break;
+                                            }
+                                        }
+                                        if (count == 4){
+                                            winner = this.board[i][j];
+                                            return winner;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return winner;
+                }
+
+                toTable(){
+                    console.table(this.board);
+                }
+
+                clone(){
+                    let newBoard = new Board(7, 6);
+                    for (let i = 0; i < this.board.length; i++){
+                        for (let j = 0; j < this.board[i].length; j++){
+                            newBoard.board[i][j] = this.board[i][j];
+                        }
+                    }
+                    return newBoard;
+                }
+                
+                cloneBoard(){
+                    let boardCopy = [];
+                    for (let i = 0; i < this.board.length; i++){
+                        boardCopy[i] = [];
+                        for (let j = 0; j < this.board[i].length; j++){
+                            boardCopy[i][j] = this.board[i][j]
+                        }
+                    }
+                    return boardCopy;
+                }
+            }
+            
+            function mouseClicked(){
+                game.playerDrop(); 
+            }
+            
+            function touchEnded(){
+                game.playerDrop(); 
+            }
+            
+            
+        </script>
+    </head>
+    <body>
+        
+    </body>
+</html>

@@ -1,0 +1,213 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        <meta name="viewport" content="width=device-width, minimum-scale=0,initial-scale=0.7,maximum-scale=1,user-scalable=no" />
+
+        
+        <script>
+        
+        
+            var rose;
+            var backgroundOffset = 0;
+            var stemVertices = [];
+            var stemStep = 0;
+            var thorns = [];
+            function setup(){
+                createCanvas(window.innerWidth, window.innerHeight);
+                rose = new Rose(width/2, height/3);
+                
+                for (var i = 0; i < height-rose.pos.y; i += 3){
+                    var object = {
+                        x: width/2 + sin(i/70)*10,
+                        y: height-i,
+                        thorn: false
+                    }
+                    if (random() < 0.05 && (height-rose.pos.y) - i > 100){
+                        object.thorn = new Thorn(object.x, object.y, i);
+                    }
+                    
+                    stemVertices.push(object);
+                }
+                
+            }
+            
+            function draw(){
+                //background(205);
+                
+                
+                for (var i = 0; i < stemVertices.length; i++){
+                    stemVertices[i].x = width/2 + sin((i*3)/70 + backgroundOffset)*10;
+                    if (stemVertices[i].thorn){
+                        stemVertices[i].thorn.move(stemVertices[i].x);
+                    }
+                }
+                
+                rose.pos.y = height/3 + sin(backgroundOffset)*15;
+                
+                var colorOffset = floor(map(sin(backgroundOffset), -1, 1, 0, 70));
+                background(200, 150, 180 + colorOffset);
+                backgroundOffset += 0.01;
+                
+                var strokeWeightOffset = map(sin(rose.scaleOffset/2), -1, 1, 10, 15);
+                strokeWeight(strokeWeightOffset);
+                stroke(1, 136, 16);
+               
+                beginShape();
+                noFill();
+                for (var i = 0; i < Math.min(stemStep, stemVertices.length); i++){
+                    vertex(stemVertices[i].x, stemVertices[i].y);
+                    if (stemVertices[i].thorn){
+                        stemVertices[i].thorn.show();
+                    }
+                }
+                
+                endShape();
+               
+                stemStep++;
+                
+                
+                
+                rose.show();
+                if (rose.segments.length < 6){
+                rose.grow();
+                    rose.animate();
+                }
+                else{
+                    rose.animate();
+                }
+                
+            }
+
+            function Rose(x, y){
+                this.pos = createVector(x, y);
+                this.segments = [];
+                this.segments[0] = new Segment(this.pos.x, this.pos.y, 0, 0);
+                this.angle = 0;
+                this.scaleOffset = 1;
+                
+                this.show = function (){
+
+                    for (var i = this.segments.length-1; i >= 0; i--){
+                        this.segments[i].pos.y = this.pos.y;
+                        this.segments[i].show();
+                        
+                    }
+                    
+                }
+                
+                this.animate = function(){
+                    
+                    this.angle+= 0.002;
+                    
+                    this.scaleOffset += 0.03;
+                    
+                    var radiusOffset = map(sin(this.scaleOffset), -13, 13, -2.4, 2.4);
+                    for (var i = 0; i < this.segments.length; i++){
+                        this.segments[i].r += radiusOffset;
+                    }
+                }
+                
+                this.grow = function(){
+                    var lastIndex = this.segments.length-1;
+                    this.segments[lastIndex].grow();
+                    
+                    if (this.segments.length > 1){
+                    if (this.segments[lastIndex].r - this.segments[lastIndex-1].r > 20 && this.segments.length < 5){
+                        this.segments.push(new Segment(this.pos.x, this.pos.y, this.segments[lastIndex].r, lastIndex+1));
+                    }
+                    }
+                    else{
+                        if (this.segments[0].r > 20){
+                            this.segments.push(new Segment(this.pos.x, this.pos.y, this.segments[0].r, 1));
+                           
+                        }
+                    }
+                }
+            }
+            
+            
+            function Segment(x, y, r, i){
+                this.r = r;
+                this.firstR = r;
+                this.pos = createVector(x, y);
+                this.i = i;
+                this.grow = function (){
+                    if (this.r - this.firstR < 27){
+                    this.r+= 0.2;
+                    }
+                }
+
+                this.show = function (){
+                    push();
+                    
+                    translate(this.pos.x, this.pos.y);
+                    rotate(rose.angle);
+                    
+                    
+                    rectMode(CENTER);
+                    stroke(0);
+                    strokeWeight(2);
+                    fill(191 + this.i * 15, 0, 0);
+                    if (this.i != 4){
+                    
+                    rect(0, 0, this.r*2, this.r*2);
+                        ellipse(0, 0, this.r*2, this.r*2);
+                    }
+                    push();
+                    rotate(Math.PI/4);
+                    rect(0, 0, Math.max(0, this.r*Math.sqrt(2)), Math.max(0, this.r*Math.sqrt(2)));
+                    pop();
+                    
+                    pop();
+                    
+                }
+            }
+            
+            
+            function Thorn(x, y, i){
+                this.pos = createVector(x, y);
+                this.vertices = [];
+                this.direction = random() < 0.5 ? true : false;
+                this.w = 3;
+                
+                
+                this.move = function(x){
+                    this.pos.x = x;
+                }
+                
+                this.show = function(){
+                    push();
+                    strokeWeight(12);
+                    if (this.direction){
+                        triangle(this.pos.x - this.w - 3, this.pos.y, this.pos.x-3, this.pos.y + this.w/2, this.pos.x-3, this.pos.y - this.w/2);
+                    }
+                    else{
+                         triangle(this.pos.x + this.w+3, this.pos.y, this.pos.x+3, this.pos.y + this.w/2, this.pos.x+3, this.pos.y - this.w/2);
+                    }
+                    pop();
+                }
+            }
+           
+
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    body{
+        margin: 0;
+    }
+    canvas{
+        width: 100%;
+        height: 100%;
+    }
+</style>
+    
+</html>

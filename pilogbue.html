@@ -1,0 +1,242 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+        
+        var gravity;
+        var bow;
+        var shootStart;
+            var wind;
+            var arrowLength = 25;
+            var shootVector;
+            var sounds = {
+                bow: new Audio("bowshoot.mp3"),
+                arrowHit: new Audio("arrowhit.mp3")
+            }
+            
+            var arrowdrawPoint;
+            var windXoff = 0;
+            var windYoff = 1000;
+            function setup(){
+                createCanvas(600, 400);
+                gravity = createVector(0, 0.2);
+                bow = new Bow(40, height - 40);
+                shootStart = createVector();
+                shootVector = createVector(0, 0);
+                arrowdrawPoint = 0;
+                wind = createVector(-0.1, 0);
+                //setInterval(shootArrow, 100);
+            }
+            
+            function draw(){
+                background(color(210, 210, 255));
+                
+                
+                noStroke();
+                fill(color(100, 255, 100));
+                rect(0, height- 10, width, height);
+                shootVector.set(mouseX - shootStart.x, mouseY - shootStart.y);
+                bow.update();
+                bow.updateArrows();
+                bow.show();
+                
+                if (bow.shooting){
+                    
+                    noStroke();
+                    var rectangleHeight = shootVector.mag()/1.68;
+                    var colorValue = map(rectangleHeight, 0, height, 0, 255);
+                    fill(color(255 - colorValue, colorValue, 0));
+                    rect(0, (height-10) - rectangleHeight, 5, rectangleHeight);
+                }
+                
+                
+                if (keyIsPressed){
+                    if (keyCode === 32){
+                    shootArrow();
+                    }
+                }
+                
+                
+                drawWind();
+            }
+            
+        
+            function Bow(x, y){
+                this.pos = createVector(x, y);
+                this.projectiles = [];
+                
+                this.shooting = false;
+                
+                this.headingVector = createVector(0, 0);
+                this.segments = 40;
+                this.length = 40;
+                this.drawVector = createVector(mouseX - this.pos.x, mouseY - this.pos.y);
+                this.drawVectorLength = this.drawVector.mag();
+                
+                this.update = function(){
+                    this.headingVector.set(mouseX - this.pos.x, mouseY - this.pos.y);
+                    
+                }
+                
+                this.updateArrows = function(){
+                    if (this.projectiles.length > 100){
+                        this.projectiles.splice(this.projectiles[0], 1);
+                    }
+                    for (var i = 0; i < this.projectiles.length; i++){
+                        if (this.projectiles[i].pos.x > (width - (this.projectiles[i].length/2 + 2 - Math.abs(this.projectiles[i].vel.heading()*this.projectiles[i].length/5))) || this.projectiles[i].pos.y > height - (this.projectiles[i].length/2 + 8 - Math.abs((this.projectiles[i].vel.heading() - Math.PI/2)*this.projectiles[i].length/5))){
+                            if (!this.projectiles[i].stuck){
+                                sounds.arrowHit.play();
+                            }
+                            this.projectiles[i].stuck = true;
+                            this.projectiles[i].show();
+                        }
+                        else{
+                            this.projectiles[i].applyForce(gravity);
+                            this.projectiles[i].applyForce(wind);
+                            this.projectiles[i].update();
+                            this.projectiles[i].show();
+                        }
+                    }
+                }
+                
+                this.show = function(){
+                    push();
+                    stroke(color(102, 51, 0));
+                    strokeWeight(3);
+                    translate(this.pos.x, this.pos.y);
+                    rotate(this.headingVector.heading());
+                    beginShape();
+                    noFill();
+                    
+                    arrowdrawPoint = Math.max(-shootVector.mag()/15, -arrowLength/2.5);
+                    var angle = -Math.PI/3;
+                    
+                    for( var i = 5; i < this.segments-7; i++){
+                        
+                        
+                        var dx = this.length/1.7 * Math.cos(angle); 
+                        var dy = this.length/1.7 * Math.sin(angle); 
+                        vertex(-10 + dx, dy+1/2);
+                        angle += Math.PI/this.segments;
+                    }
+                    endShape();
+                    stroke(80);
+                    strokeWeight(2);
+                    
+                    if (this.shooting){
+                        line(0, -this.length/2, arrowdrawPoint, 0);
+                        line(0, this.length/2, arrowdrawPoint, 0);
+                        stroke(0);
+                        line(arrowdrawPoint, 0, arrowdrawPoint + arrowLength, 0);
+                        stroke(100);
+                        
+                        var trianglePoint = arrowdrawPoint + arrowLength;
+                        triangle(trianglePoint, 2, trianglePoint, -2, trianglePoint + 2, 0);
+                    }
+                    else{
+                        line(0, -this.length/2, 0, this.length/2);
+                    }
+                        
+                    pop();
+                    
+                }
+            }
+            
+            function Arrow(x, y, vel){
+                this.pos = createVector(x, y);
+                this.vel = vel;
+                this.acc = createVector(0, 0);
+                this.stuck = false;
+                this.length = 25;
+                
+                this.applyForce = function(force){
+                    
+                    this.acc.add(force);
+                
+                }
+                
+                this.update = function(){
+                    this.vel.add(this.acc);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+                    
+                }
+                
+                this.show = function(){
+                    push();
+                    stroke(0);
+                    strokeWeight(2);
+                    translate(this.pos.x, this.pos.y);
+                    rotate(this.vel.heading());
+                    line(0 - this.length/2, 0, 0 + this.length/2, 0);
+                    stroke(100);
+                    triangle(this.length/2, 2, this.length/2, -2, this.length/2 + 2, 0);
+                    pop();
+                }
+            }
+            
+            function mousePressed(){
+                bow.shooting = true;
+                shootStart.set(mouseX, mouseY);
+            }
+            
+            function mouseReleased(){
+                bow.shooting = false;
+                var arrowVel = createVector(shootStart.x - mouseX, shootStart.y - mouseY);
+                arrowVel.setMag(arrowVel.mag()/13);
+                var rotationVector = createVector(mouseX - bow.pos.x, mouseY - bow.pos.y);
+                rotationVector.setMag(arrowVel.mag());
+                if (rotationVector.x >= -1){
+                bow.projectiles.push(new Arrow(bow.pos.x, bow.pos.y, rotationVector));
+                sounds.bow.play();
+                }
+            }
+            
+            function shootArrow(){
+                var vector = createVector(mouseX - bow.pos.x, mouseY - bow.pos.y);
+                vector.setMag(vector.mag()/20);
+                bow.projectiles.push(new Arrow(bow.pos.x, bow.pos.y, vector));
+            }
+            
+            function Obstacle(x, y){
+                
+            }
+            
+            function drawWind(){
+                textAlign(CENTER);
+                textStyle(BOLD);
+                textSize(15);
+                fill(color(0, 150, 220));
+                text("Wind", 100 + wind.x*200, 20);
+                
+                
+                wind.x = map(noise(windXoff), 0, 1, -0.02, 0.04);
+                wind.y = map(noise(windYoff), 0, 1, -0.002, 0.004);
+                stroke(color(0, 100, 255));
+                strokeWeight(3);
+                line(100, 25, 100 + wind.x*1000, 25 + wind.y*50);
+                strokeWeight(2);
+                ellipse(100 + wind.x*1000, 25.5 + wind.y*50, 2, 5);
+                
+                windXoff += 0.005;
+                windYoff += 0.005;
+            }
+            
+            
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

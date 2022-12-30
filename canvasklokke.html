@@ -1,0 +1,164 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script>
+        window.onload = oppstart;
+        var intervall;
+            function oppstart(){
+                var canvas = document.getElementById("klokke");
+                var ctx = canvas.getContext("2d"); 
+                ctx.beginPath();
+                
+                ctx.translate(canvas.width/2, canvas.height/2);
+                ctx.scale(1, -1);
+                ctx.stroke();
+                intervall = setInterval(function() {
+                    klokkeiCanvas(tidtilGrader(klokkeArray()));
+                    var tid = new Date();
+                    document.getElementById("klokkeutskrift").innerHTML = tid.getHours() + ":" + tid.getMinutes() + ":" + tid.getSeconds();
+                }, 50);
+                
+            }
+            
+            function klokkeArray(){
+                var tid = new Date();
+                var timer = tid.getHours();
+                if (timer >= 12){
+                    timer = timer-12;
+                }
+                var resultat = [timer, tid.getMinutes(), tid.getSeconds(), tid.getMilliseconds()];
+                return resultat;
+                
+            }
+        
+            function tidtilGrader(array1){
+                var array = [];
+                
+                array[0] = (((array1[0]*3600000) + (array1[1]* 60000))/(3600000*12))*6.28;
+                array[1] = (((array1[1]* 60000) + array1[2]*1000)/3600000)*6.28;
+                array[2] = ((array1[2]*1000 + array1[3])/60000)*6.28;
+                
+                return array;
+            }
+            
+            function klokkeiCanvas(graderArray){
+                var canvas = document.getElementById("klokke");
+                var ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                
+                
+                
+                clear();
+                
+                for (var i = 0; i < graderArray.length; i++){
+                    ctx.save();
+                    ctx.rotate(-graderArray[i]);
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, (-15*Math.pow(i, 2)+65*i+130));
+                    
+                    
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                }
+                ctx.scale(1, -1);
+                sirkel();
+                ctx.scale(1, -1);
+                
+            }
+            
+            function sirkel(){
+                var canvas = document.getElementById("klokke");
+                var ctx = canvas.getContext("2d");
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, canvas.width/2-20, 0, 2*Math.PI);
+                
+                for (var i = 0; i <= 11; i++){
+                    ctx.moveTo(Math.fround(0.29+(244.89*Math.sin(0.52*i+0))), Math.fround(0.07+(244.81*Math.sin(0.52*i+1.57))));
+                    ctx.lineTo(Math.fround(0+(279.71*Math.sin(0.52*i+0))), Math.fround(0.06+(279.75*Math.sin(0.52*i+1.57))));
+                }
+                
+//                ctx.moveTo(0, 245);
+//                ctx.lineTo(0, 280);
+//                
+//                ctx.moveTo(123, 212);
+//                ctx.lineTo(140, 242);
+//                
+//                ctx.moveTo(212, 122);
+//                ctx.lineTo(242, 140);
+//                
+//                ctx.moveTo(245, 0);
+//                ctx.lineTo(280, 0);
+//                
+//                ctx.moveTo(212, -122);
+//                ctx.lineTo(242, -140);
+//                
+//                ctx.moveTo(123, -212);
+//                ctx.lineTo(140, -242);
+//                
+//                ctx.moveTo(0, -245);
+//                ctx.lineTo(0, -280);
+//                
+//                ctx.moveTo(-122, -212);
+//                ctx.lineTo(-140, -242);
+//                
+//                ctx.moveTo(-212, -122);
+//                ctx.lineTo(-242, -140);
+//                
+//                ctx.moveTo(-245, 0);
+//                ctx.lineTo(-280, 0);
+//                
+//                ctx.moveTo(-212, 123);
+//                ctx.lineTo(-242, 140);
+//                
+//                ctx.moveTo(-121, 212);
+//                ctx.lineTo(-140, 242);
+                
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(0, 0, 10, 0, 2*Math.PI);
+                ctx.fill();
+                
+            }
+            function clear(){
+                var canvas = document.getElementById("klokke");
+                var ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                ctx.stroke();
+                
+        }
+        </script>
+    </head>
+
+<body><div id="wrapper">
+<canvas id="klokke" width="600" height="600"></canvas>
+    <div id="klokkeutskrift"></div>
+    </div>
+</body>
+<style>
+    #wrapper{
+        
+        position: relative;
+    }
+    #klokke{
+        border: solid;
+        position: absolute;
+        
+        
+         
+    }
+    #klokkeutskrift{
+        font-size: 50px;
+        position: absolute;
+        left: 215px;
+        top: 460px;
+       
+        
+    }
+    
+    </style>
+</html>

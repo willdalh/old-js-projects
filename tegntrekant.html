@@ -1,0 +1,347 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+        
+    <script>
+        window.onload = oppstart;
+        var arrayPunkt = [];
+        var figurer = [];
+        var canvas = document.getElementById("tegneflate");
+        var slettedeFigurer = [];
+
+        function oppstart(){
+
+            if (localStorage.lagredeFigurer){
+                var elem = document.createElement("button");
+                elem.innerHTML = "Gamle figurer";
+                elem.id = "gamlefigurer";
+                elem.setAttribute("onclick", "gamleFigurer();")
+                elem.setAttribute("class", "knapper");
+                document.getElementById("funksjonsKnapper").appendChild(elem);
+            }
+
+            
+
+            if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                alert("Fungerer nok ikke på alle mobiler. Sender derfor en varm og koselig hilsen fra William som plaster på såret :)");
+            }
+            document.getElementById("tegneflate").onmousedown = function (){
+
+                arrayPunkt = [];
+                this.onmousemove = loggpunkt;
+                this.onmouseup = function(){
+                    tegnpunkt();
+                    slettedeFigurer = [];
+                    this.onmousemove = null;
+                }
+            }
+
+            document.getElementById("undo").onclick = function(){
+                
+                slettedeFigurer.push(figurer.pop());
+                
+                var ctx = document.getElementById("tegneflate").getContext("2d");
+                var canvas = document.getElementById("tegneflate");
+                ctx.beginPath();
+
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                ctx.stroke();
+                tegnFigurer();
+                console.log(figurer);
+                console.log(slettedeFigurer);
+
+
+
+            };
+            
+            document.getElementById("redo").onclick = function (){
+                if (slettedeFigurer.length > 0){
+                figurer.push(slettedeFigurer.pop());
+                
+                var ctx = document.getElementById("tegneflate").getContext("2d");
+                var canvas = document.getElementById("tegneflate");
+                ctx.beginPath();
+
+                ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+                ctx.stroke();
+                tegnFigurer();
+                console.log(figurer);
+                console.log(slettedeFigurer);
+                }
+            };
+
+            document.getElementById("reset").onclick = function(){
+                if (slettedeFigurer.length > 0 && figurer.length == 0){
+                    figurer = slettedeFigurer;
+                    tegnFigurer();
+                    this.innerHTML = "Reset";
+                }
+                else{
+                clear();
+                this.innerHTML = "Unreset";
+                }
+            }
+            //document.getElementById("likestill").onchange = clear;
+
+            window.onbeforeunload = function(){
+                if (figurer.length > 0){
+                    localStorage.setItem("lagredeFigurer", JSON.stringify(figurer));
+                }
+            }
+
+        }
+
+        function loggpunkt(evt){
+            var canvas = document.getElementById("tegneflate");
+            var rect = canvas.getBoundingClientRect();
+            y = evt.clientY - rect.top;
+            x = evt.clientX - rect.left;  
+            arrayPunkt.push(x);
+            arrayPunkt.push(y);
+            var ctx = document.getElementById("tegneflate").getContext("2d");
+
+            ctx.beginPath();
+            ctx.rect(x, y, 2, 2);
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+
+            ctx.closePath();
+        }
+        function tegnpunkt(){
+            var ctx = document.getElementById("tegneflate").getContext("2d");
+            var canvas = document.getElementById("tegneflate");
+            document.getElementById("reset").innerHTML = "Reset";
+            var grader = 0;
+            var aPunkt = [arrayPunkt[0], arrayPunkt[1]];
+            var bPunkt = [arrayPunkt[0], arrayPunkt[1]];
+            var cPunkt = [arrayPunkt[0], arrayPunkt[1]];
+
+            for (var a = 0; a < arrayPunkt.length; a+=2){
+                if (arrayPunkt[a] < aPunkt[0]){
+                    aPunkt = [arrayPunkt[a], arrayPunkt[a+1]];
+                }
+            }
+            for (var b = 0; b < arrayPunkt.length; b+=2){
+                if (arrayPunkt[b] > bPunkt[0]){
+                    bPunkt = [arrayPunkt[b], arrayPunkt[b+1]];
+                }
+            }
+
+            for (var c = 1; c < arrayPunkt.length; c+=2){
+                if (arrayPunkt[c] < cPunkt[1]){
+                    cPunkt = [arrayPunkt[c-1], arrayPunkt[c]];
+
+                }
+            }
+            if (document.getElementById("likestill").checked){
+                var forhold = ((bPunkt[0]-aPunkt[0])/(bPunkt[1]-aPunkt[1]));
+
+
+                grader = (Math.atan(forhold));
+
+
+            }
+            figurer.push({ax: aPunkt[0], ay: aPunkt[1], bx: bPunkt[0], by: bPunkt[1], cx: cPunkt[0], cy: cPunkt[1], grader: grader});
+
+            tegnFigurer();
+
+
+            ctx.closePath();
+        }
+
+
+        function radianerTilGrader(radianer){
+
+            return 180*radianer/Math.PI;
+        }
+
+
+        function graderTilRadianer(grader){
+            return Math.PI*grader/180;
+        }
+
+        function clear(){
+            var canvas = document.getElementById("tegneflate");
+            var ctx = canvas.getContext("2d");
+            ctx.beginPath();
+            ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+            slettedeFigurer = figurer;
+            figurer = [];
+        }
+
+
+        function gamleFigurer(){
+            var ctx = document.getElementById("tegneflate").getContext("2d");
+            var canvas = document.getElementById("tegneflate");
+
+
+
+            //ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+            var lagret = JSON.parse(localStorage.getItem("lagredeFigurer"));
+            console.log(lagret);
+            for (var i = 0; i < lagret.length; i++){
+                tegnTrekant(lagret[i].ax, lagret[i].ay, lagret[i].bx, lagret[i].by, lagret[i].cx, lagret[i].cy, lagret[i].grader);
+                figurer.push({ax: lagret[i].ax, ay: lagret[i].ay, bx: lagret[i].bx, by: lagret[i].by, cx: lagret[i].cx, cy: lagret[i].cy, grader: lagret[i].grader});
+            }
+
+
+            localStorage.removeItem("lagredeFigurer");
+        }
+
+
+
+        function tegnTrekant(ax, ay, bx, by, cx, cy, grader){
+            var ctx = document.getElementById("tegneflate").getContext("2d");
+            ctx.beginPath();
+            if (grader){
+                ctx.save();
+                ctx.translate(bx, by);
+
+
+
+                if (by > ay){
+
+
+                    ctx.rotate(grader-graderTilRadianer(90));
+                }
+                else{
+                    ctx.rotate(grader+graderTilRadianer(90));
+                }
+                ctx.translate(-bx, -by);
+            }
+
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+
+            ctx.moveTo(bx, by);
+            ctx.lineTo(cx, cy);
+
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(ax, ay);
+            ctx.restore();
+            ctx.stroke();
+        }
+
+        function mangekant(evt, kanter, radius){
+            var ctx = canvas.getContext("2d");
+            var senter = [evt.clientX, evt.clientY];
+            var linjelengde = (radius/kanter);
+
+
+        }
+
+        function tegnFigurer(){
+            var canvas = document.getElementById("tegneflate");
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(canvas.width, canvas.height, -canvas.width*2, -canvas.height*2);
+            for (var i = 0; i < figurer.length; i++){
+
+                tegnTrekant(figurer[i].ax, figurer[i].ay, figurer[i].bx, figurer[i].by, figurer[i].cx, figurer[i].cy, figurer[i].grader);
+
+            } 
+        }
+        
+        $(document).ready(function(){
+            $("#p1").hide();
+            $("#infoKnp").click(function(){
+                
+                
+                    
+                    
+                    $("#p1").slideToggle(400);
+                    
+  $("html, body").animate({ scrollTop: $(document).height() }, 1000);
+});
+                })
+        
+            
+       
+    </script>
+    </head>
+
+<body>
+    
+    <div id="tegneflateWrapper">
+        
+        <canvas id="tegneflate" width="900px" height="520px"></canvas>
+    
+    <div id="kontrollpanel">
+    <input type="checkbox" id="likestill"></input>Likestill grunnlinje i forhold til x-akse<br>
+<div id="funksjonsKnapper">
+<button id="reset" class="knapper">Reset</button>
+<button id="undo" class="knapper">Undo</button>
+    <button id="redo" class="knapper">Redo</button>
+        </div>
+        
+        <button id="infoKnp" class="knapper" >Informasjon</button>
+        </div>
+   
+    <p id="p1">Et lite program som bruker en enkel algoritme for å gjenkjenne trekantfigurer i brukerens skisser. <br>
+    © William Dalheim.</p>
+   
+    </div>
+</body>
+<style>
+    #venstresideDiv{
+        height: 30px;
+        width: 200px;
+        background-color: blueviolet;
+    }
+    #tegneflateWrapper{
+        text-align: center;
+        
+    }
+    #tegneflate{
+        border: solid;
+        margin: 5px;
+        background-color: #fcf6e0;
+        
+    }
+    body{
+        font-size: 25px;
+
+    }
+    #kontrollpanel{
+        background-color: #EF5350;
+        border: solid 6px #D32F2F;
+        border-radius: 5px;
+        width: auto;
+        position: relative;
+        
+    }
+    #infoKnp{
+        margin-bottom: 15px;
+    }
+    .knapper{
+            font-size: 15px;
+            margin: 5px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-family: 'Raleway', sans-serif;
+            box-shadow: 0px 5px 0px #1a242e; 
+            top: 3px;
+            transition: all ease 0.1s;
+            position: relative;
+    }
+    .knapper:active{
+        top: 6px;
+        box-shadow: 0px 2px 0px #1a242e;
+        
+    }
+    
+    .knapper:focus{
+        outline: none;
+    }
+
+
+
+
+
+</style>
+</html>

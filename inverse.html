@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+            
+            var segments = [];
+            var len = 3;
+            function setup(){
+                createCanvas(600, 400);
+                segments[0] = new Segment(len, width/2, height/2);
+                segments[0].calculate();
+                for (var i = 1; i < 100; i++){
+                    segments[i] = new Segment(len, segments[i-1].b.x, segments[i-1].b.y);
+                    segments[i].calculate();
+                }
+            }
+            
+            function draw(){
+                background(51);
+                segments[0].steer(mouseX, mouseY);
+                
+                segments[0].calculate();
+                
+                segments[0].show();
+                
+                for (var i = 1; i < segments.length; i++){
+                    segments[i].follow(segments[i-1].a.x, segments[i-1].a.y);
+                    
+                    segments[i].calculate();
+                    segments[i].show(); 
+                }
+            }
+            
+            
+            function Segment(len, x, y){
+                this.a = createVector(x, y);
+                this.b = createVector(0, 0);
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                this.len = len;
+                this.angle = 0;
+                this.parent = parent;
+                
+                this.follow = function (tx, ty){
+                    var target = createVector(tx, ty);
+                    var dir = createVector(target.x - this.a.x, target.y - this.a.y); 
+                    
+                    this.angle = dir.heading();
+                    dir.setMag(this.len);
+                    dir.mult(-1);
+                    
+                    this.a.x = target.x + dir.x;
+                    this.a.y = target.y + dir.y;
+                }
+                this.calculate = function(){
+                    this.vel.add(this.acc);
+                    this.a.add(this.vel);
+                    this.acc.mult(0);
+                    
+                    var dx = this.len * Math.cos(this.angle);
+                    var dy = this.len * Math.sin(this.angle);
+                    this.b.x = this.a.x + dx;
+                    this.b.y = this.a.y + dy;
+                    
+                    
+                }
+                
+                this.show = function (){
+                    stroke(255);
+                    strokeWeight(30);
+                    line(this.a.x, this.a.y, this.b.x, this.b.y);
+                }
+                
+                this.steer = function(tx, ty){
+                    var distance = dist(tx, ty, this.a.x, this.a.y);
+                    var desired = createVector(tx - this.a.x, ty- this.a.y);
+                    desired.setMag(distance/5);
+                    
+                    var steer = p5.Vector.sub(desired, this.vel);
+                    this.applyForce(steer); 
+                }
+                this.applyForce = function(force){
+                    this.acc.add(force);
+                }
+            }
+            
+            
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

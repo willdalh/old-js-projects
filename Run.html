@@ -1,0 +1,361 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="three.js"></script>
+        <script src="object.js"></script>
+        
+        <script>
+            var scene, camera, renderer, backgroundScene, backgroundCamera;
+            var grid = [];
+            var w = 5;
+            var depthLength = 31;
+            var gridCenterPoint;
+            var spotLight, ambientLight, spotLightTarget;
+            var player;
+            var gravity;
+            var cameraTarget;
+            var sceneRotation = {
+                step: 0,
+                direction: -1,
+                rotation: false
+            };
+            var animationFrameID;
+            var onMobile = false;
+            var storeVelocity = 0;
+            var savedZ;
+            
+            function setup(){
+                
+                
+                
+                
+                
+                noCanvas();
+                
+                
+                
+                
+                
+                if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                    onMobile = true;
+                }
+            
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+                
+                
+                
+                renderer.autoClear = false;
+                var loader = new THREE.TextureLoader();
+                var texture = loader.load( 'stars2.jpg' );
+                var backgroundMesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(2, 2, 0),
+                    new THREE.MeshBasicMaterial({
+                        map: texture
+                    }));
+                backgroundMesh.material.depthTest = false;
+            backgroundMesh.material.depthWrite = false;
+                backgroundScene = new THREE.Scene();
+                backgroundCamera = new THREE.Camera();
+                backgroundScene.add(backgroundCamera );
+                backgroundScene.add(backgroundMesh );
+                
+                //Pivot group
+                //pivot = new THREE.Group();
+                //scene.add(pivot);
+                
+                gridCenterPoint = new THREE.Vector3(-w/2, 15, w*2);
+                
+                //Test camera position
+                //camera.position.set(5, -40, 40);
+                camera.position.set(0, 0, -5);
+               
+                
+                for (var i = 0; i < 4; i++){
+                    grid[i] = [];
+                    for (var j = 0; j < 4; j++){
+                        grid[i][j] = []; 
+                    }
+                }
+                
+                player = new Player(0, 0, -7);
+                player.addToScene();
+                
+                
+                
+                //camera.lookAt(gridCenterPoint);
+                //camera.rotation.x += Math.PI/2;
+                
+                gravity = new THREE.Vector3(0, 0, -0.01);
+                cameraTarget = new THREE.Object3D();
+                cameraTarget.position.set(player.mesh.position.x, player.mesh.position.y, player.mesh.position.z);
+                camera.rotation.x += Math.PI/2;
+                
+                
+                generateTiles();
+                activateLights();
+                
+                for (var i = 0; i < grid.length; i++){
+                    for (var j = 0; j < grid[i].length; j++){
+                        for (var k = 0; k < 8; k++){
+                            grid[i][j][k].filled = true;
+                        }
+                    }
+                }
+                
+               
+                
+                render();
+            }
+            
+            function render(){
+                animationFrameID = requestAnimationFrame(render);
+                renderer.clear(); 
+                renderer.render(backgroundScene, backgroundCamera);
+                renderer.render(scene, camera);
+                
+                
+                newTiles();
+                
+                for (var i = 0; i < grid.length; i++){
+                    for (var j = 0; j < grid[i].length; j++){
+                        for (var k = 0; k < grid[i][j].length; k++){
+                            if(grid[i][j][k].filled){
+                                grid[i][j][k].mesh.visible = grid[i][j][k].filled;
+                            }
+                            
+
+                            if (player.intersects(grid[i][j][k].mesh) && grid[i][j][k].filled){
+
+                                player.bounce();
+
+                            }
+
+                        }
+                    }
+                }
+                
+                if (!onMobile){
+
+                    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)){
+                        player.applyForce(new THREE.Vector3(-0.01, 0, 0));
+                    }
+
+                    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)){
+                        player.applyForce(new THREE.Vector3(0.01, 0, 0));
+                    }
+                }
+                
+                else{
+                    player.applyForce(new THREE.Vector3(0.01*rotationY/15, 0, 0));
+                }
+               
+                
+                
+                player.applyForce(gravity);
+                player.vel.y += 0.00002;
+                
+                player.update();
+                
+                
+                camera.position.y = player.mesh.position.y-13;
+                camera.position.x = player.mesh.position.x/1.6;
+                camera.position.z = -2.7;
+                camera.position.z += player.mesh.position.z/4;
+                camera.rotation.y = player.mesh.position.x/60;
+                cameraTarget.position.x = player.mesh.position.x/3;
+                cameraTarget.position.y = player.mesh.position.y +10;
+                
+                spotLightTarget.position.set(0, player.mesh.position.y, 0);
+                spotLightTarget.position.y = player.mesh.position.y; 
+                spotLight.position.y = spotLightTarget.position.y - 23;
+                
+                if (player.mesh.position.z < - 40){
+                    cancelAnimationFrame(animationFrameID);
+                    window.location.reload();
+                    
+                }
+                
+                
+                if (!sceneRotation.rotation && player.mesh.position.z > -10){
+                if (player.mesh.position.x > 9 || player.mesh.position.x < -9){
+                    sceneRotation.rotation = true;
+                    savedZ = player.mesh.position.z;
+                    player.vel.x = 0;
+                    storeVelocity = player.vel.y;
+                    player.vel.z = 0;
+                    if (player.mesh.position.x < 0){
+                        sceneRotation.direction = -1;
+                    }
+                    else{
+                        sceneRotation.direction = 1;
+                    }
+                }
+                }
+                
+                if(sceneRotation.rotation){
+                    
+                    var vectorToPoint = new THREE.Vector3(-sceneRotation.direction*10-player.mesh.position.x+sceneRotation.direction*(10+savedZ), 0, -9.25-player.mesh.position.z);
+                    
+                    player.mesh.position.x += vectorToPoint.x/20;
+                    player.mesh.position.z += vectorToPoint.z/20;
+                    
+                    player.vel.x = 0;
+                    player.vel.y = 0;
+                    player.vel.z = 0;
+                    rotateSceneAnimation();
+                    
+                }
+            
+            }
+            
+            function generateTiles(){
+                
+                for (var i = 0; i < 4; i++){
+                    for (var j = 0; j < depthLength; j++){
+                    grid[0][i][j] = new Tile(-10+(i*5)-gridCenterPoint.x, j*5-gridCenterPoint.y, 0-gridCenterPoint.z);
+                    grid[0][i][j].addToScene();
+                    grid[0][i][j].update();
+                    
+                    }
+                }
+                
+                for (var i = 0; i < 4; i++){
+                   
+                    for (var j = 0; j < depthLength; j++){
+                    grid[1][i][j] = new Tile(7.5-gridCenterPoint.x, j*5-gridCenterPoint.y, 2.5+i*5-gridCenterPoint.z);
+                    grid[1][i][j].addToScene();
+                    grid[1][i][j].update();
+                    grid[1][i][j].mesh.rotation.y = Math.PI*1.5;
+                    
+                    }
+                }
+                
+                
+                
+               
+                for (var i = 0; i < 4; i++){
+                    for (var j = 0; j < depthLength; j++){
+                    grid[2][i][j] = new Tile(+5-(i*5)-gridCenterPoint.x, j*5-gridCenterPoint.y, 20-gridCenterPoint.z);
+                    grid[2][i][j].addToScene();
+                    grid[2][i][j].update();
+                    grid[2][i][j].mesh.rotation.y = Math.PI;
+                    
+                    }
+                    
+                }
+                
+                for (var i = 0; i < 4; i++){
+                    for (var j = 0; j < depthLength; j++){
+                    grid[3][i][j] = new Tile(-12.5-gridCenterPoint.x, j*5-gridCenterPoint.y, 17.5-i*5-gridCenterPoint.z);
+                    grid[3][i][j].addToScene();
+                    grid[3][i][j].update();
+                    grid[3][i][j].mesh.rotation.y = Math.PI/2;
+                    
+                    }
+                }
+                
+              
+                
+            }
+            
+            function activateLights(){
+                spotLight = new THREE.SpotLight( 0xffffff, 4);
+				
+				spotLight.angle = Math.PI / 4;
+                
+				spotLight.penumbra = 0;
+				spotLight.decay = 1.3;
+				spotLight.distance = 150;
+				spotLight.castShadow = true;
+				spotLight.shadow.mapSize.width = 1024;
+				spotLight.shadow.mapSize.height = 1024;
+				spotLight.shadow.camera.near = 10;
+				spotLight.shadow.camera.far = 300;
+				scene.add( spotLight );
+                spotLight.position.set(0, 30, 0); 
+                
+                
+                spotLightTarget = new THREE.Object3D();
+                scene.add(spotLightTarget);
+                spotLight.target = spotLightTarget;
+                
+                ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+                //scene.add(ambientLight);
+                
+            }
+            
+           
+            
+            function newTiles(){
+                if (grid[0][0][0].mesh.position.y < player.mesh.position.y-10){
+                
+                    for (var i = 0; i < grid.length; i++){
+                        for (var j = 0; j < grid[i].length; j++){
+                            grid[i][j].push(grid[i][j].shift());
+                            grid[i][j][grid[i][j].length-1].mesh.position.y = grid[i][j][grid[i][j].length-2].mesh.position.y+w;
+                            grid[i][j][grid[i][j].length-1].update();
+                        }
+                    }
+                }
+            }
+            
+            function keyPressed(){
+                if (keyCode === 32){
+                    if (player.vel.z <= 0.02 && player.vel.z >= -0.02){
+                    player.applyForce(new THREE.Vector3(0, 0, 0.35));
+                    }
+                }
+                if (keyCode === DOWN_ARROW){
+                    console.log(grid[0][0][0].mesh.position.y + " + " + player.mesh.position.y);
+                }
+            }
+            
+            function rotateSceneAnimation(){
+                var axis = new THREE.Vector3(0, 1, 0);
+                sceneRotation.step += (Math.PI/2)/40;
+                var rotMatrix = new THREE.Matrix4().makeRotationAxis(axis, ((sceneRotation.direction*Math.PI/2)/40));
+                for (var i = 0; i < grid.length; i++){
+                    for (var j = 0; j < grid[i].length; j++){
+                        for (var k = 0; k < grid[i][j].length; k++){
+                            grid[i][j][k].mesh.applyMatrix(rotMatrix);                        
+                            
+                        }
+                    }
+                }
+                if (sceneRotation.step == Math.PI/2){
+                    sceneRotation.rotation = false;
+                    sceneRotation.step = 0;
+                    player.vel.y = storeVelocity;
+                }
+            }
+            
+            function touchStarted(){
+                if (player.vel.z <= 0.02 && player.vel.z >= -0.02){
+                    player.applyForce(new THREE.Vector3(0, 0, 0.3));
+                    }
+            }
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    body{
+        margin: 0;
+    }
+    canvas{
+        width: 100%;
+        height: 100%;
+    }
+</style>
+    
+</html>

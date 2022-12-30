@@ -1,0 +1,332 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, minimum-scale=0,initial-scale=0.8,maximum-scale=1,user-scalable=no" />
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+
+        <script src="constructor.js"></script>
+
+        <script>
+            
+            var indikasjon = false;
+            var obstacles = [];
+            var balls = [];
+            var cols, rows;
+
+            var shootDirection = {
+                begin: 0,
+                end: 0,
+                vector: 0
+            };
+
+            var player = {
+                score: 0
+                
+            }
+            var arrowIndication;
+            var nyX;
+            var ballsInMotion = false;
+            
+            var mic;
+            window.addEventListener('scroll', noscroll);
+            
+            function noscroll() {
+                window.scrollTo(0, 0);
+            }
+            
+            function setup(){
+                cols = 6;
+                rows = 7;
+                createCanvas(400, 480);
+                nyX = width/2;
+//                mic = new p5.AudioIn();
+//                mic.start();
+                
+                shootDirection.begin = createVector(0, 0);
+                shootDirection.end = createVector(0, 0);
+                shootDirection.vector = createVector(0, 0);
+                
+                for (var i = 0; i < 1; i++){
+                    balls[i] = new Ball(width/2);
+                }
+                generateNewObstacles();
+                
+                
+                var buttonElem = document.createElement("button");
+                buttonElem.id = "skipKnapp";
+                buttonElem.innerHTML = "Skip";
+                buttonElem.setAttribute("class", "prosjektKnapp");
+                buttonElem.addEventListener("click", continueBalls);
+                document.body.appendChild(buttonElem);
+
+            }
+
+            function draw(){
+                if(indikasjon){
+                    noLoop();
+                }
+                background(51);
+                ellipse(nyX, height-10, 12, 12);
+//                var vol = mic.getLevel()*15;
+//                console.log(vol);
+//                if (random()< 0.5){
+//                if (vol > 2){
+//                    for (var i = 0; i < 1; i++){
+//                        balls.push(new Ball());
+//                    }
+//                }
+//                }
+                
+                if (balls.length > 100){
+                    balls.splice(0, balls.length-100);
+                }
+                
+                drawArrow();
+                
+                utskriftScore();
+                
+                if (ballsInMotion){
+                    for (var i = 0; i < balls.length; i++){
+                        if (!(balls[i].hitFloor)){
+                        
+                            
+                        for(var j = 0; j < obstacles.length; j++){
+                            var testX = balls[i].pos.x;
+                            var testY = balls[i].pos.y;
+                            
+                                if (balls[i].pos.x < obstacles[j].pos.x - obstacles[j].w/2) testX = obstacles[j].pos.x - obstacles[j].w/2;
+                                else if (balls[i].pos.x > (obstacles[j].pos.x + obstacles[j].w/2)) testX = (obstacles[j].pos.x + obstacles[j].w/2);
+                                
+                                if (balls[i].pos.y < obstacles[j].pos.y - obstacles[j].w/2) testY = obstacles[j].pos.y - obstacles[j].w/2;
+                                else if (balls[i].pos.y > (obstacles[j].pos.y + obstacles[j].w/2)) testY = (obstacles[j].pos.y + obstacles[j].w/2);
+                                
+                                var distX = balls[i].pos.x - testX;
+                                var distY = balls[i].pos.y - testY;
+                                
+                                var distance = mag(distX, distY);
+                                var tall = [];
+                                if (distance <= balls[i].radius){
+                                    
+                                    if (balls[i].pos.x < (obstacles[j].pos.x - obstacles[j].w/2)){
+                                        tall.push(1);
+                                    }
+                                    if (balls[i].pos.x > (obstacles[j].pos.x + obstacles[j].w/2)){
+                                        tall.push(2);
+                                    }
+                                    if ((balls[i].pos.y) < (obstacles[j].pos.y - obstacles[j].w/2)){
+                                        tall.push(3);
+                                    }
+                                    if (balls[i].pos.y > (obstacles[j].pos.y + obstacles[j].w/2)){
+                                        tall.push(4);
+                                    }
+                                    
+                                    
+                                    balls[i].collide(tall);
+                                    obstacles[j].hits--;
+                                    if (obstacles[j].destroyed()){
+                                        obstacles.splice(j, 1);
+                                    }
+                                }
+                                
+                            
+                        }
+                            balls[i].update();
+                        balls[i].bounce();
+                        balls[i].show();
+                        }
+                    }
+                }
+                var tap = false;
+                for(var i = 0; i < obstacles.length; i++){
+                    obstacles[i].show();
+                    
+                    if (obstacles[i].pos.y > (height-44)){
+                        tap = true;
+                        
+                    }
+                    
+                }
+                if(tap){
+                        alert("Du tapte :(\nDu fikk " + player.score + " poeng\nKlikk Ok for å starte på nytt");
+                        window.location.reload();
+                    }
+                if (ballsInMotion){
+                var tall = 0;
+                for (var i = 0; i < balls.length; i++){
+                    if (balls[i].hitFloor){
+                        tall++;
+                    }
+                }
+                
+                if (tall == balls.length){
+                    ballsInMotion = false;
+                    player.score++;
+                    generateNewObstacles();
+                    nyX = balls[balls.length-1].pos.x;
+                    for(var i = 0; i < balls.length; i++){
+                        balls[i] = new Ball(nyX);
+                        
+                    }
+                    balls.push(new Ball(nyX));
+                }
+                }
+            }
+            
+            function continueBalls(){
+                ballsInMotion = false;
+                    
+                    generateNewObstacles();
+                    for(var i = 0; i < balls.length; i++){
+                        balls[i] = new Ball(nyX);
+                        
+                    }
+            }
+
+            function mousePressed(){
+                //if(mouseY < 450){
+                if (!ballsInMotion){
+                arrowIndication = true;
+                shootDirection.begin = createVector(mouseX, mouseY);
+                //}
+                }
+            }
+            
+            function touchStarted(){
+                //if(mouseY < 450){
+                if (!ballsInMotion){
+                arrowIndication = true;
+                shootDirection.begin = createVector(mouseX, mouseY);
+                //}
+                }
+            }
+            
+            function mouseReleased(){
+                if (!ballsInMotion){
+                arrowIndication = false;
+                shootDirection.vector.mult(-1);
+                shootDirection.vector.setMag(9);
+                if (shootDirection.vector.y < 0){
+                for (var i = 0; i < balls.length; i++){
+                    launchBall(i);
+                }
+                ballsInMotion = true;
+                }
+                }
+                 
+            }
+            
+            function touchEnded(){
+                if (!ballsInMotion){
+                arrowIndication = false;
+                shootDirection.vector.mult(-1);
+                shootDirection.vector.setMag(9);
+                    if (shootDirection.vector.y < 0){
+                for (var i = 0; i < balls.length; i++){
+                    launchBall(i);
+                }
+                ballsInMotion = true;
+                }
+                }
+            }
+            
+            function launchBall(i){
+                setTimeout(function() {
+                balls[i].shoot(shootDirection.vector);
+                }, i*200);
+            }
+
+            function drawArrow(){
+                
+                if (arrowIndication){
+                    stroke('white');
+                    strokeWeight(6);
+
+                    shootDirection.end.x = mouseX;
+                    shootDirection.end.y = mouseY;
+                    
+                    shootDirection.vector = createVector(shootDirection.end.x - shootDirection.begin.x, shootDirection.end.y - shootDirection.begin.y);
+                    shootDirection.vector.mult(2);
+                    
+                    //line(width/2, height, 50, 50);
+                    for (var i = 0; i < 10; i++){
+                        ellipse(nyX- shootDirection.vector.x*(i/10), height -shootDirection.vector.y*(i/10)-10, 6, 6);
+                    }
+                    //line(width/2, height, (width/2)-shootDirection.vector.x, height-shootDirection.vector.y);
+               }
+                noStroke();
+                
+            }
+            
+            function keyTyped(){
+                if (key === "p"){
+                    indikasjon = !indikasjon;
+                }
+            }
+            
+            function generateNewObstacles(){
+                for (var i = 0; i < 6; i++){
+                    if(random() < 0.6){
+                    var nyObstacle = new Obstacle(((width)/cols)*i+34, 34, floor(random((player.score+2)/2, (player.score+1))));
+                    obstacles.push(nyObstacle);
+                    }
+                }
+                for (var i = 0; i < obstacles.length; i++){
+                    obstacles[i].pos.y += 68;
+                }
+            }
+            
+            function utskriftScore(){
+                
+                push();
+                fill(255, 255, 255, 150);
+                textSize(50);   
+                textAlign(CENTER);
+                text("Bollockz", width/2, height/2);
+                textSize(30);
+                textAlign(LEFT);
+                
+                text("Score: " +player.score, 5, height-5);
+                text("Baller: " + balls.length, width-110 - (35), height-5);
+                pop();
+            }
+            
+            
+
+
+        </script>
+    </head>
+
+    <body>
+        
+    </body>
+
+    <style>
+        *{
+            margin: 0;
+        }
+        
+        
+        .prosjektknapp{
+            font-size: 40px;
+            margin: 10px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-family: 'Raleway', sans-serif;
+            box-shadow: 0px 7px 0px #1a242e; 
+            top: 4px;
+            transition: all ease 0.1s;
+            position: relative;
+            
+            
+        }
+        
+        .prosjektknapp:active{
+            top: 8px;
+            box-shadow: 0px 3px 0px #1a242e;
+        }
+    </style>
+    
+</html>
