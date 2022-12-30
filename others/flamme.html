@@ -1,0 +1,180 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+        
+        var flames = [];
+            var flamegravity;
+            var wind;
+            var windxoff = 1000;
+            function setup(){
+                createCanvas(300, 200);
+                flames[0] = new Flame(width/2, height/2);
+                flamegravity = createVector(0, -0.2);
+                wind = createVector(0, 0.1);
+            }
+            
+            function draw(){
+                
+                //console.log(flames[0]);
+                //frameRate(100);
+                background(255);
+                updateWind();
+                if (frameCount%2 == 0){
+                if (mouseIsPressed){
+                    flames.push(new Flame(mouseX, mouseY));
+                }
+                }
+                loadPixels();
+                for (var i = 0; i < flames.length; i++){
+                flames[i].applyForce(flamegravity);
+                flames[i].applyForce(wind);
+                flames[i].update();
+                flames[i].updateParticles();
+                flames[i].show();
+                    
+                    if (flames[i].flameIsDead){
+                        flames.splice(i, 1);
+                    }
+                }
+                updatePixels();
+                
+                
+            }
+            
+            function mouseDragged(){
+                flames.push(new Flame(mouseX, mouseY));
+            }
+            
+            function Flame(x, y){
+                this.pos = createVector(x, y);
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                this.flameIsDead = false;
+                
+                this.particledistance = 4;
+                this.particles = [];
+                
+                
+                for (var i = 0; i < 19; i++){
+                    this.particles[i] = [];
+                    for (var j = 0; j < 19; j++){
+                        var distance = dist(i, j, 9, 9);
+                        if (distance < 7){
+                            var farge = color(255, 255-distance*30, 0, 200);
+                            this.particles[i][j] = new Particle(this.pos.x + (9-i), this.pos.y + (9-j), farge);
+                        }
+                    }
+                }
+                
+                this.update = function(){
+                    this.vel.add(this.acc);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+                }
+                
+                this.updateParticles = function(){
+                    var flameDead = 0;
+                    
+                    for (var i = 0; i < this.particles.length; i++){
+                        for (var j = 0; j < this.particles[i].length; j++){
+                            
+                            
+                            
+                            if (this.particles[i][j] != undefined){
+                                this.particles[i][j].pos.set(floor(this.pos.x + (9-i)), floor(this.pos.y + (9-j)));
+                                this.particles[i][j].neighbors = 0;
+                                flameDead++;
+                            if (this.particles[i+1][j] != undefined){
+                                this.particles[i][j].neighbors++;
+                            }
+                            if (this.particles[i-1][j] != undefined){
+                                this.particles[i][j].neighbors++;
+                            }
+                            if (this.particles[i][j+1] != undefined){
+                                this.particles[i][j].neighbors++;
+                            }
+                            if (this.particles[i][j-1] != undefined){
+                                this.particles[i][j].neighbors++;
+                            }
+                            
+                            if (random() < (1/(this.particles[i][j].neighbors*5))){
+                                //if (this.particles[i][j].neighbors != 4){
+                                this.particles[i][j] = undefined;
+                                    
+                            }
+                            }
+                        }
+                    }
+                    
+                    if (flameDead == 0){
+                        this.flameIsDead = true;
+                    }
+                }
+                 
+                
+                
+                this.show = function(){
+                    for (var i = 0; i < this.particles.length; i++){
+                        for (var j = 0; j < this.particles[i].length; j++){
+                            if (this.particles[i][j] != undefined){
+                                this.particles[i][j].updateColor();
+                                this.particles[i][j].show();
+                            }
+                        }
+                    }
+                }
+                
+                this.applyForce = function(force){
+                    this.acc.add(force);
+                }
+                    
+            }
+            
+            function Particle(x, y, farge){
+                this.pos = createVector(x, y);
+                this.firstPos = createVector(x, y);
+                this.color = farge;
+                this.neighbors = 0; 
+                
+                this.updateColor = function(){
+                    var distance = dist(this.pos.x, this.pos.y, this.firstPos.x, this.firstPos.y);
+                    this.color = color(255, 180 - distance * 6, 10);
+                    //this.color = color(random(255), random(255), random(255));
+                }
+                
+                this.show = function(){
+                    
+                    //fill(this.color);
+                    //noStroke();
+                    var index = floor((this.pos.x)+(this.pos.y)*width)*4;
+                    pixels[index] = this.color.levels[0];
+                    pixels[index+1] = this.color.levels[1];
+                    pixels[index+2] = this.color.levels[2];
+                    //rect(this.pos.x, this.pos.y, 2, 2);
+                    
+                }
+            }
+            
+            function updateWind(){
+                wind.x = map(noise(windxoff), 0, 1, -0.08, 0.16);
+                windxoff+= 0.01;
+            }
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

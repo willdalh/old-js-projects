@@ -1,0 +1,69 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.0/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.0/addons/p5.sound.js"></script>
+        
+        
+        <script>
+        
+            let vec;
+            let cols, rows;
+            let sclX;
+            let sclY;
+            function setup(){
+                createCanvas(600,400);
+                rows = 48;
+                cols = 32;
+                sclX = width/rows;
+                sclY = height/cols;
+                
+                background(240);
+                //scale(1, -1);
+                vec = createVector(0,0);
+                line(0, 280, 600, 280);
+                line(300, 0, 300, 400);
+                strokeWeight(2);
+                
+                let array = [];
+                for (let x = 0; x < rows; x++){
+                    array[x] = [];
+                    for (let y = 0; y < cols; y++){
+                        vec.set((x)*sclX+sclX/2-300, y*sclY+sclY/2-280);
+                        //console.log(vec);
+                        
+                        push();
+                        let angle = Math.atan(yderivert(vec.x/sclX, vec.y/sclY)/1);
+                        translate(-vec.x+300, vec.y+280);
+                        rotate(angle);
+                        line(-sclX/6, 0, sclX/6, 0);
+                        
+                        pop();
+                        array[x][y] = vec.copy();
+                    }
+                }
+                console.log(array);
+                
+            }
+            
+            function draw(){
+                noLoop();
+            }
+            
+            function yderivert(x, y){
+                return (y);
+            }
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

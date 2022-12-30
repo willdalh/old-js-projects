@@ -1,0 +1,160 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+            var target;
+            var mover;
+            
+            
+            function setup(){
+                createCanvas(600, 600);
+                target = new Target(width/2, 0, 20);
+                mover = new Mover(width/2, height/3, target);
+                
+            }
+            
+            function draw(){
+                
+                background(200);
+                noFill();
+                stroke(51);
+                rect(0, 0, width-1, height-1);
+                target.bounce();
+                target.update();
+                target.show();
+                
+                mover.update();
+                mover.show();
+                
+                push();
+                var farge = map(mouseX, 0, width, 0, 255);
+                fill(farge, 0, 0);
+                
+                ellipse(mouseX, mouseY, 30, 30);
+                pop();
+                
+            }
+            
+            function Mover(x, y, target){
+                this.pos = createVector(x, y);
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                
+                this.color = [50, 50, 200];
+                
+                this.target = target;
+                
+                this.update = function(){
+                    this.vel.add(this.acc);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+                    var distance = dist(this.target.pos.x, this.target.pos.y, this.pos.x, this.pos.y);
+                    var desired = createVector(this.target.pos.x - this.pos.x, this.target.pos.y- this.pos.y);
+                    desired.setMag(Math.pow(Math.E, distance*0.01));
+                    
+                    var steer = p5.Vector.sub(desired, this.vel);
+                    this.applyForce(steer);
+                    
+                    this.color[1] = map(this.pos.x, 0, width, 0, 255);
+                    this.color[2] = map(this.pos.y, 0, height, 0, 255);
+                }
+                
+                this.applyForce = function(force){
+                    this.acc.add(force);
+                    
+                }
+                
+                this.show = function(){
+                    push();
+                    noStroke();
+                    fill(this.color);
+                    translate(this.pos.x, this.pos.y);
+                    rotate(this.vel.heading()-PI/2*3);
+                    rectMode(CENTER);
+                    rect(0, 0, 20, 50);
+                    triangle(-10, -25, 0, -45, 10, -25);
+                    pop();
+                }
+            }
+            
+            function Target(x, y, r){
+                this.pos = createVector(x, y);
+                this.vel = createVector(random(-4, 4), random(-4, 4));
+                this.acc = createVector(0, 0);
+                this.attractor; 
+                this.radius = r;
+                this.color = [30, 255, 30];
+                
+                this.update = function(){
+                    this.vel.add(this.acc);
+                    this.pos.add(this.vel);
+                    this.acc.mult(0);
+//                    this.pos.x = mouseX;
+//                    this.pos.y = mouseY;
+                    this.color[1] = map(this.pos.x, 0, width, 0, 255);
+                    this.color[0] = map(this.pos.y, 0, height, 0, 255);
+                }
+                
+                this.bounce = function (){
+                    if (this.pos.x < this.radius){
+                        this.vel.x *= -1;
+                        this.pos.x = this.radius;;
+                    }
+                    if (this.pos.x > width-this.radius){
+                        this.vel.x *= -1;
+                        this.pos.x = width-this.radius;
+                    }
+                    if (this.pos.y > height-this.radius){
+                        this.vel.y *= -1;
+                        this.pos.y = height-this.radius;
+                    }
+                    if(this.pos.y < this.radius){
+                        this.vel.y *= -1;
+                        this.pos.y = this.radius;
+                    }
+                    
+                   
+                    
+                }
+                
+                this.applyForce = function(force){
+                    this.acc.add(force);
+                }
+                
+                this.show = function(){
+                    push();
+                    fill(this.color);
+                    noStroke();
+                    ellipse(this.pos.x, this.pos.y, this.radius*2, this.radius*2);
+                    pop();
+                }
+            }
+            
+            function mousePressed(){
+                var force = createVector(target.pos.x - mouseX, target.pos.y - mouseY);
+                var distance = dist(target.pos.x, target.pos.y, mouseX, mouseY);
+                force.setMag(300/distance);
+                
+               
+                target.applyForce(force);
+            }
+            
+            
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

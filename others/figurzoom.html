@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.js"></script>
+        
+        
+        
+        <script>
+            let points = [];
+            let factor = 1;
+            let drawing = false;
+            function setup(){
+                createCanvas(600, 400);
+                
+                background(230);
+            }
+            
+            function draw(){
+                
+                
+                if (drawing){
+                    background(210);
+                    
+                    let vector = createVector((mouseX - width/2),(mouseY - height/2));
+                    points.push({length: vector.mag(), angle: vector.heading()});
+                    
+                    
+                    for(let i = 0; i < points.length; i++){
+                        let currentPoint = points[i];
+                        if (i > 0 && i <= points.length){
+                            strokeWeight(2);
+                            line(points[i-1].length * Math.cos(points[i-1].angle) + width/2,
+                                 points[i-1].length * Math.sin(points[i-1].angle) + height/2, 
+                                 currentPoint.length * Math.cos(currentPoint.angle) + width/2, 
+                                 currentPoint.length * Math.sin(currentPoint.angle) + height/2);
+                        }
+                    }
+                }
+                else{
+                    background(230);
+                    if (points.length > 0){
+                        factor += 1;
+                        let factorA = Math.pow(Math.E, 0.02* factor);
+                        let outside = false;
+                        for (let i = 0; i < points.length; i++){
+                            let Vector = p5.Vector.fromAngle(points[i].angle);
+                            Vector.setMag(points[i].length * factor);
+                            if (Vector.mag() > 10000){
+                                outside = true;
+                            }
+                            let currentPoint = points[i];
+                            if (i > 0 && i <= points.length){
+                                strokeWeight(2);
+                                line(points[i-1].length * Math.cos(points[i-1].angle) * factorA + width/2,
+                                     points[i-1].length * Math.sin(points[i-1].angle) * factorA + height/2, 
+                                     currentPoint.length * Math.cos(currentPoint.angle) * factorA + width/2, 
+                                     currentPoint.length * Math.sin(currentPoint.angle) * factorA + height/2);
+                            }
+                        }
+                        if (outside){
+                            points = [];
+                            factor = 1;
+                        }
+                    }
+                }
+            }
+            
+            function mousePressed(){
+                drawing = true;
+            }
+            
+            function mouseReleased(){
+                drawing = false;
+                
+                
+            }
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

@@ -1,0 +1,67 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+            
+            var angleStep,
+                angle, 
+                lenStep,
+                len, 
+                a, 
+                b, 
+                prevB;
+                
+            
+            function setup(){
+                createCanvas(600, 600);
+                a = createVector(width/2, height/2);
+                b = createVector(0, 0);
+                prevB = createVector(0, 0);
+                len = 290;
+                angle = 0;
+                
+                background(51);
+            }
+            
+            function draw(){
+                angleStep = map(mouseX, 0, width, 0.1, 0.4);
+                lenStep = map(mouseY, 0, height, 0, 1);
+                
+                var dx = len * Math.cos(angle);
+                var dy = len * Math.sin(angle);
+                
+                b.x = a.x + dx;
+                b.y = a.y + dy;
+                stroke(255);
+                strokeWeight(5);
+                if (frameCount > 1){
+                line(b.x, b.y, prevB.x, prevB.y);
+                }
+                angle -= angleStep;
+                len -= lenStep;
+                prevB.x = b.x;
+                prevB.y = b.y;
+                
+                if(len <= 0){
+                    background(51);
+                    len = 290;
+                }
+            }
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>

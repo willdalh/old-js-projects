@@ -1,0 +1,266 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.9/addons/p5.sound.js"></script>
+        
+        
+        <script>
+            var cols, rows;
+            var scl = 20;
+            var cells = [];
+            var intervall;
+            function setup(){
+                createCanvas(400, 400);
+                cols =  floor(width/scl);
+                rows = floor(height/scl);
+                
+                for (var x = 0; x < cols; x++){
+                    cells[x] = [];
+                    for (var y = rows-1; y >= 0; y--){
+                        cells[x].push(new Cell(x*scl, y*scl));
+                        
+                        
+                    }
+                }
+                var brElem = document.createElement("br");
+                document.body.appendChild(brElem);
+                var nextElem = document.createElement("button");
+                nextElem.innerHTML = "Next";
+                nextElem.addEventListener("click", evolveCells);
+                document.body.appendChild(nextElem);
+                
+                var speedElem = document.createElement("input");
+                speedElem.id = "speedInput";
+                speedElem.type = "range";
+                speedElem.min = 0.05;
+                speedElem.max = 1;
+                speedElem.step = 0.05;
+                speedElem.value = 0.3;
+                speedElem.addEventListener("input", endreSpeed);
+                document.body.appendChild(speedElem);
+                
+                var intervalElem = document.createElement("button");
+                
+                intervalElem.innerHTML = "Start";
+                intervalElem.addEventListener("click", intervalEvolve);
+                document.body.appendChild(intervalElem);
+                
+                var brElem2 = document.createElement("br");
+                document.body.appendChild(brElem2);
+                
+                var sizeElem = document.createElement("input");
+                sizeElem.type = "number";
+                sizeElem.value = 20;
+                sizeElem.id = "sizeInput";
+                sizeElem.addEventListener("change", oppdaterSize);
+                
+                document.body.appendChild(sizeElem);
+                
+                
+                
+            }
+            
+            function draw(){
+                background(51);
+                
+                stroke(255);
+                
+                for (var x = 0; x < cols; x++){
+                    line(x*scl, height, x*scl, 0);
+                }
+                for (var y = 0; y < rows; y++){
+                    line(width, y*scl, 0, y*scl);
+                }
+                
+                for (var i = 0; i < cells.length; i++){
+                    for (var j = 0; j < cells[i].length; j++){
+                        cells[i][j].show();
+                    }
+                    
+                }
+            }
+            
+            function Cell(x, y){
+                this.pos = createVector(x, y);
+                
+                this.alive = false;
+                if(random() < 0.5){
+                    this.alive = true;
+                }
+                this.neighbours = 0; 
+                this.size = width/cols;
+                this.show = function(){
+                    if (this.alive){
+                        
+                        rect(this.pos.x, this.pos.y, this.size, this.size);
+                        fill(0, 220, 0);
+                    }
+                }
+                
+                
+                    
+                    
+                    
+            }
+            
+            
+            function evolve(i, j){
+                if (cells[i][j].alive){
+                if (cells[i][j].neighbours <= 1){
+                        cells[i][j].alive = false;
+                    }
+                    else if (cells[i][j].neighbours >= 4){
+                        cells[i][j].alive = false;
+                    }
+                    else if (cells[i][j].neighbours == 2 || cells[i][j].neighbours == 3){
+                        cells[i][j].alive = true;
+                    }
+                }
+                else{
+                   if (cells[i][j].neighbours == 3){
+                       cells[i][j].alive = true;
+                   } 
+                }
+                }
+            
+            
+            function mousePressed(){
+                var trykkX = mouseX;
+                var trykkY = mouseY - height/rows;
+                console.log("Hei");
+                for (var i = 0; i < cells.length; i++){
+                    for (var j = 0; j < cells[i].length; j++){
+                        
+                        if (trykkX > cells[i][j].pos.x && trykkX < (cells[i][j].pos.x + cells[i][j].size) && trykkY < cells[i][j].pos.y && trykkY > (cells[i][j].pos.y - cells[i][j].size)){
+                            cells[i][j].alive = !cells[i][j].alive;
+                           
+                        }
+                    }
+                }
+            }
+                    
+            function calculateNeighbours(i, j){
+                var neighbours = 0; 
+                
+                
+                
+                
+                
+                if (cells[i] && cells[i][j-1]){
+                if (cells[i][j-1].alive){
+                    
+                    neighbours++;
+                }
+                }
+                
+                if (cells[i] && cells[i][j+1]){
+                if (cells[i][j+1].alive){
+                    neighbours++;
+                }
+                }
+                
+                
+                if (cells[i-1] && cells[i-1][j]){
+                if (cells[i-1][j].alive){
+                    neighbours++;
+                }
+                }
+                
+                if (cells[i+1] && cells[i+1][j]){
+                if (cells[i+1][j].alive){
+                    neighbours++;
+                }
+                }
+                
+                if (cells[i-1] && cells[i-1][j-1]){
+                if (cells[i-1][j-1].alive){
+                    neighbours++;
+                }
+                }
+                
+                if (cells[i+1] && cells[i+1][j+1]){
+                if (cells[i+1][j+1].alive){
+                    neighbours++;
+                }
+                }
+        
+                if (cells[i-1] && cells[i-1][j+1]){
+                if (cells[i-1][j+1].alive){
+                    neighbours++;
+                }
+                }
+                
+                if (cells[i+1] && cells[i+1][j-1]){
+                if (cells[i+1][j-1].alive){
+                    neighbours++;
+                }
+                }
+                return neighbours;
+            }
+            
+            function evolveCells(){
+                
+                
+                for (var x = 0; x < cells.length; x++){
+                    for (var y = 0; y < cells[x].length; y++){
+                        cells[x][y].neighbours = calculateNeighbours(x, y);
+                    }
+                }
+                
+                
+                for (var x = 0; x < cells.length; x++){
+                    for (var y = 0; y < cells[x].length; y++){
+                        evolve(x, y);
+                    }
+                }
+            }
+            
+            function intervalEvolve(){
+                if (!intervall){
+                var speed = Number(document.getElementById("speedInput").value);
+                intervall = setInterval(evolveCells, speed*1000);
+                }
+                else{
+                    clearInterval(intervall);
+                    intervall = false;
+                }
+            }
+            
+            function endreSpeed(){
+                if (intervall){
+                    evolveCells();
+                    clearInterval(intervall);
+                    var speed = Number(document.getElementById("speedInput").max*(1.01) - document.getElementById("speedInput").value);
+                    intervall = setInterval(evolveCells, speed*1000);
+                }
+            }
+            
+            function oppdaterSize(){
+                scl = document.getElementById("sizeInput").value;
+                cols =  floor(width/scl);
+                rows = floor(height/scl);
+                cells = [];
+                for (var x = 0; x < cols; x++){
+                    cells[x] = [];
+                    for (var y = rows-1; y >= 0; y--){
+                        cells[x].push(new Cell(x*scl, y*scl));
+                        
+                        
+                    }
+                }
+            }
+        
+        </script>
+    </head>
+
+<body>
+
+</body>
+
+<style>
+    
+</style>
+    
+</html>
